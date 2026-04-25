@@ -1,0 +1,11 @@
+{
+    "github.copilot.chat.maxOutputTokens": 800,
+    "github.copilot.chat.showThoughtBlocks": false,
+    "github.copilot.chat.editor.echoPrompts": false,
+    "github.copilot.chat.welcomeMessage": "none",
+    "github.copilot.advanced.agentMode.verbosity": "minimal",
+    "github.copilot.advanced.agentMode.autoApprove": {
+        "terminal": true,
+        "fileRead": true
+    }
+}
