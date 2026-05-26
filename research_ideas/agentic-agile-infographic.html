@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic Agile — Split-Brain Knowledge Base</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap');
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --ink: #07070f;
+  --surf: #0f0f1a;
+  --surf2: #161625;
+  --edge: #252540;
+  --indigo: #6366f1;
+  --violet: #8b5cf6;
+  --cyan: #06b6d4;
+  --emerald: #10b981;
+  --amber: #f59e0b;
+  --rose: #f43f5e;
+  --sky: #38bdf8;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --dim: #475569;
+}
+
+body { background:var(--ink); color:var(--text); font-family:'Inter',sans-serif; overflow:hidden; height:100vh; width:100vw; }
+
+/* ─── DECK ──────────────────────────────────────── */
+.deck { position:relative; width:100%; height:100vh; }
+
+.slide {
+  position:absolute; inset:0;
+  opacity:0; transform:translateY(30px);
+  pointer-events:none;
+  transition:opacity .5s ease, transform .5s ease;
+  overflow:hidden;
+  display:flex; flex-direction:column;
+}
+.slide.active { opacity:1; transform:translateY(0); pointer-events:all; }
+.slide.out    { opacity:0; transform:translateY(-30px); }
+
+/* ─── NAV BAR ───────────────────────────────────── */
+.nav-bar {
+  position:fixed; bottom:28px; left:50%; transform:translateX(-50%);
+  display:flex; align-items:center; gap:12px;
+  background:rgba(15,15,26,.85); backdrop-filter:blur(24px);
+  border:1px solid var(--edge); border-radius:60px;
+  padding:8px 18px; z-index:200;
+}
+.nav-btn {
+  width:32px; height:32px; border-radius:50%; border:none;
+  background:transparent; color:var(--muted); cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px; transition:all .2s;
+}
+.nav-btn:hover:not(:disabled) { background:var(--surf2); color:var(--text); }
+.nav-btn:disabled { opacity:.25; cursor:default; }
+.nav-dots { display:flex; gap:6px; }
+.ndot {
+  height:5px; border-radius:3px; background:var(--edge);
+  cursor:pointer; transition:all .25s;
+}
+.ndot.on { background:var(--indigo); }
+.nav-label { font-size:11px; color:var(--dim); font-weight:600; min-width:36px; text-align:center; }
+
+/* ─── COMMON ─────────────────────────────────────── */
+.slide-head { padding:36px 60px 0; flex-shrink:0; }
+.eyebrow {
+  display:inline-flex; align-items:center; gap:7px;
+  font-size:10.5px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--indigo); margin-bottom:14px;
+}
+.eyebrow::before { content:''; display:block; width:20px; height:2px; background:var(--indigo); border-radius:2px; }
+.slide-title { font-size:clamp(24px,2.8vw,38px); font-weight:900; letter-spacing:-.025em; line-height:1.1; margin-bottom:8px; }
+.slide-sub { font-size:13.5px; color:var(--muted); max-width:620px; line-height:1.6; }
+.grd { background:linear-gradient(120deg,var(--indigo),var(--violet),#c084fc); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.body { flex:1; padding:20px 60px 80px; display:flex; gap:24px; min-height:0; }
+
+/* ─── CHIP / BADGE ──────────────────────────────── */
+.chip {
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:20px;
+  border:1px solid currentColor;
+}
+.chip-i { color:var(--indigo); border-color:rgba(99,102,241,.35); background:rgba(99,102,241,.1); }
+.chip-g { color:var(--emerald);border-color:rgba(16,185,129,.35);background:rgba(16,185,129,.1); }
+.chip-a { color:var(--amber);  border-color:rgba(245,158,11,.35); background:rgba(245,158,11,.1); }
+.chip-c { color:var(--cyan);   border-color:rgba(6,182,212,.35);  background:rgba(6,182,212,.1); }
+.chip-r { color:var(--rose);   border-color:rgba(244,63,94,.35);  background:rgba(244,63,94,.1); }
+
+/* ─── METRIC BOX ─────────────────────────────────── */
+.metric {
+  background:var(--surf2); border:1px solid var(--edge);
+  border-radius:14px; padding:18px 20px; text-align:center;
+}
+.metric-val { font-size:34px; font-weight:900; line-height:1; margin-bottom:4px; }
+.metric-lbl { font-size:10.5px; color:var(--dim); font-weight:600; letter-spacing:.08em; text-transform:uppercase; }
+
+/* ─── FLOW ARROW ─────────────────────────────────── */
+@keyframes flowdash { to { stroke-dashoffset:-20; } }
+.flow-line { animation:flowdash 1.2s linear infinite; }
+
+/* ─── PULSE ──────────────────────────────────────── */
+@keyframes pulse { 0%,100%{opacity:.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.08)} }
+.pulse { animation:pulse 2.5s ease-in-out infinite; }
+
+/* ─── SLIDE 1: TITLE ─────────────────────────────── */
+#s1 { justify-content:center; padding:0 60px; position:relative; }
+.s1-grid { display:grid; grid-template-columns:1.1fr 0.9fr; gap:0; align-items:center; height:100%; }
+.s1-left { position:relative; z-index:2; }
+.hero-eyebrow { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:22px; }
+.hero-title { font-size:clamp(38px,5.5vw,72px); font-weight:900; letter-spacing:-.04em; line-height:.98; margin-bottom:22px; }
+.hero-desc { font-size:15px; color:var(--muted); max-width:480px; line-height:1.7; margin-bottom:32px; }
+.hero-metrics { display:flex; gap:0; }
+.hm { padding:18px 28px; border-right:1px solid var(--edge); }
+.hm:first-child { padding-left:0; }
+.hm:last-child  { border-right:none; }
+.hm-val { font-size:28px; font-weight:900; line-height:1; margin-bottom:4px; }
+.hm-lbl { font-size:11px; color:var(--dim); font-weight:500; }
+
+/* ─── SLIDE 2: OVERVIEW ──────────────────────────── */
+#s2 .body { flex-direction:column; gap:16px; }
+
+/* ─── SLIDE 3: BENEFITS ──────────────────────────── */
+#s3 .body { align-items:stretch; }
+
+/* ─── SLIDE 4: PIPELINE ──────────────────────────── */
+#s4 .body { flex-direction:column; }
+
+/* ─── SLIDE 5: SETUP ─────────────────────────────── */
+#s5 .body { gap:16px; }
+
+/* ─── SLIDE 6: PREVENTION ───────────────────────── */
+#s6 .body { gap:16px; }
+
+/* ─── SLIDE 7: SUMMARY ───────────────────────────── */
+#s7 .body { flex-direction:column; gap:16px; }
+
+/* ─── PROGRESS BAR ──────────────────────────────── */
+.pbar-track { background:var(--edge); border-radius:99px; height:8px; overflow:hidden; }
+.pbar-fill  { height:100%; border-radius:99px; }
+@keyframes growbar { from{width:0} to{width:var(--w)} }
+.slide.active .pbar-fill { animation:growbar 1s .3s both; }
+</style>
+</head>
+<body>
+<div class="deck">
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 1 — TITLE
+══════════════════════════════════════════════════ -->
+<div class="slide active" id="s1">
+  <!-- animated background -->
+  <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none" viewBox="0 0 1400 900" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <radialGradient id="g1" cx="70%" cy="40%"><stop offset="0%" stop-color="#6366f1" stop-opacity=".18"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+      <radialGradient id="g2" cx="20%" cy="70%"><stop offset="0%" stop-color="#8b5cf6" stop-opacity=".12"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+    </defs>
+    <rect width="1400" height="900" fill="url(#g1)"/>
+    <rect width="1400" height="900" fill="url(#g2)"/>
+    <!-- grid -->
+    <g stroke="#252540" stroke-width=".6" opacity=".5">
+      <line x1="0" y1="150" x2="1400" y2="150"/><line x1="0" y1="300" x2="1400" y2="300"/>
+      <line x1="0" y1="450" x2="1400" y2="450"/><line x1="0" y1="600" x2="1400" y2="600"/>
+      <line x1="0" y1="750" x2="1400" y2="750"/>
+      <line x1="200" y1="0" x2="200" y2="900"/><line x1="400" y1="0" x2="400" y2="900"/>
+      <line x1="600" y1="0" x2="600" y2="900"/><line x1="800" y1="0" x2="800" y2="900"/>
+      <line x1="1000" y1="0" x2="1000" y2="900"/><line x1="1200" y1="0" x2="1200" y2="900"/>
+    </g>
+  </svg>
+
+  <div class="s1-grid" style="position:relative;z-index:1;padding:60px 0">
+    <div class="s1-left">
+      <div class="hero-eyebrow">
+        <span class="chip chip-i">Agentic Agile Methodology</span>
+        <span class="chip chip-g">Zero-Cost CI/CD</span>
+        <span class="chip chip-a">Enterprise Scale</span>
+      </div>
+      <h1 class="hero-title">Split-Brain<br><span class="grd">Knowledge Base</span><br>Blueprint</h1>
+      <p class="hero-desc">Automated orchestration of bifurcated documentation across 30+ React micro-frontends and Java Spring Boot — bridging Product Owners and Engineers without LLM keys in CI/CD.</p>
+      <div class="hero-metrics">
+        <div class="hm"><div class="hm-val" style="color:#6366f1">30+</div><div class="hm-lbl">MFE Repos</div></div>
+        <div class="hm"><div class="hm-val" style="color:#10b981">81.5%</div><div class="hm-lbl">Token Savings</div></div>
+        <div class="hm"><div class="hm-val" style="color:#f59e0b">$0</div><div class="hm-lbl">CI/CD LLM Cost</div></div>
+        <div class="hm"><div class="hm-val" style="color:#38bdf8">2</div><div class="hm-lbl">KB Domains</div></div>
+      </div>
+    </div>
+
+    <!-- Architecture Diagram -->
+    <div style="display:flex;justify-content:center;align-items:center">
+      <svg viewBox="0 0 440 500" width="440" height="500">
+        <defs>
+          <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#6366f1" opacity=".7"/>
+          </marker>
+          <marker id="arr-a" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#f59e0b" opacity=".7"/>
+          </marker>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- Central KB -->
+        <rect x="140" y="200" width="160" height="80" rx="14" fill="#161625" stroke="#6366f1" stroke-width="1.5" filter="url(#glow)"/>
+        <text x="220" y="230" fill="#818cf8" font-size="11" font-weight="700" text-anchor="middle" font-family="Inter">mfe-knowledge-base</text>
+        <rect x="155" y="240" width="60" height="18" rx="5" fill="rgba(99,102,241,.15)"/>
+        <text x="185" y="253" fill="#6366f1" font-size="9" font-weight="600" text-anchor="middle" font-family="Inter">product/</text>
+        <rect x="225" y="240" width="65" height="18" rx="5" fill="rgba(16,185,129,.12)"/>
+        <text x="257" y="253" fill="#10b981" font-size="9" font-weight="600" text-anchor="middle" font-family="Inter">engineering/</text>
+
+        <!-- Spoke: billing -->
+        <rect x="20" y="60" width="130" height="56" rx="10" fill="#0f0f1a" stroke="#252540" stroke-width="1"/>
+        <circle cx="38" cy="78" r="8" fill="rgba(99,102,241,.2)"/><text x="38" y="82" fill="#818cf8" font-size="9" text-anchor="middle" font-family="Inter">⚛</text>
+        <text x="100" y="82" fill="#94a3b8" font-size="9" font-weight="600" text-anchor="middle" font-family="Inter">mfe-billing-portal</text>
+        <text x="100" y="97" fill="#475569" font-size="8" text-anchor="middle" font-family="Inter">React 18 · RTK</text>
+
+        <!-- Spoke: user-settings -->
+        <rect x="290" y="60" width="130" height="56" rx="10" fill="#0f0f1a" stroke="#252540" stroke-width="1"/>
+        <circle cx="308" cy="78" r="8" fill="rgba(99,102,241,.2)"/><text x="308" y="82" fill="#818cf8" font-size="9" text-anchor="middle" font-family="Inter">⚛</text>
+        <text x="370" y="82" fill="#94a3b8" font-size="9" font-weight="600" text-anchor="middle" font-family="Inter">mfe-user-settings</text>
+        <text x="370" y="97" fill="#475569" font-size="8" text-anchor="middle" font-family="Inter">React 18 · RTK</text>
+
+        <!-- Spoke: backend -->
+        <rect x="20" y="390" width="130" height="56" rx="10" fill="#0f0f1a" stroke="#252540" stroke-width="1"/>
+        <circle cx="38" cy="408" r="8" fill="rgba(245,158,11,.15)"/><text x="38" y="412" fill="#f59e0b" font-size="9" text-anchor="middle" font-family="Inter">☕</text>
+        <text x="100" y="412" fill="#94a3b8" font-size="9" font-weight="600" text-anchor="middle" font-family="Inter">backend-core-api</text>
+        <text x="100" y="427" fill="#475569" font-size="8" text-anchor="middle" font-family="Inter">Java Spring Boot</text>
+
+        <!-- Spoke: apigee -->
+        <rect x="290" y="390" width="130" height="56" rx="10" fill="#0f0f1a" stroke="#252540" stroke-width="1"/>
+        <circle cx="308" cy="408" r="8" fill="rgba(6,182,212,.15)"/><text x="308" y="412" fill="#06b6d4" font-size="9" text-anchor="middle" font-family="Inter">🔗</text>
+        <text x="370" y="412" fill="#94a3b8" font-size="9" font-weight="600" text-anchor="middle" font-family="Inter">apigee-gateway</text>
+        <text x="370" y="427" fill="#475569" font-size="8" text-anchor="middle" font-family="Inter">API Proxy Bundle</text>
+
+        <!-- More repos hint -->
+        <text x="220" y="175" fill="#475569" font-size="9" text-anchor="middle" font-family="Inter">+ 26 more spoke repos…</text>
+
+        <!-- Connecting lines - top left -->
+        <path d="M85,116 C85,165 165,180 165,200" stroke="#6366f1" stroke-width="1.2" stroke-dasharray="5,3" fill="none" marker-end="url(#arr)" class="flow-line" opacity=".7"/>
+        <!-- top right -->
+        <path d="M355,116 C355,165 275,180 275,200" stroke="#6366f1" stroke-width="1.2" stroke-dasharray="5,3" fill="none" marker-end="url(#arr)" class="flow-line" opacity=".7"/>
+        <!-- bottom left -->
+        <path d="M85,390 C85,340 165,305 165,280" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="5,3" fill="none" marker-end="url(#arr-a)" class="flow-line" opacity=".7"/>
+        <!-- bottom right -->
+        <path d="M355,390 C355,340 275,305 275,280" stroke="#06b6d4" stroke-width="1.2" stroke-dasharray="5,3" fill="none" marker-end="url(#arr)" class="flow-line" opacity=".6"/>
+
+        <!-- Labels on lines -->
+        <rect x="58" y="148" width="60" height="16" rx="4" fill="#0f0f1a"/>
+        <text x="88" y="159" fill="#475569" font-size="8" text-anchor="middle" font-family="Inter">on v* tag push</text>
+        <rect x="318" y="148" width="60" height="16" rx="4" fill="#0f0f1a"/>
+        <text x="348" y="159" fill="#475569" font-size="8" text-anchor="middle" font-family="Inter">on v* tag push</text>
+
+        <!-- PO Agent node -->
+        <circle cx="220" cy="360" r="26" fill="#0f0f1a" stroke="#8b5cf6" stroke-width="1.5"/>
+        <text x="220" y="355" fill="#a78bfa" font-size="14" text-anchor="middle" font-family="Inter">🤖</text>
+        <text x="220" y="372" fill="#8b5cf6" font-size="8" font-weight="700" text-anchor="middle" font-family="Inter">PO AI Agent</text>
+        <path d="M220,334 L220,280" stroke="#8b5cf6" stroke-width="1" stroke-dasharray="3,3" fill="none" opacity=".5"/>
+        <text x="234" y="318" fill="#475569" font-size="8" font-family="Inter">reads</text>
+
+        <!-- Dev Copilot node -->
+        <circle cx="220" cy="460" r="22" fill="#0f0f1a" stroke="#06b6d4" stroke-width="1.2"/>
+        <text x="220" y="455" fill="#38bdf8" font-size="12" text-anchor="middle" font-family="Inter">💻</text>
+        <text x="220" y="470" fill="#06b6d4" font-size="7.5" font-weight="700" text-anchor="middle" font-family="Inter">Dev Copilot</text>
+        <line x1="220" y1="438" x2="220" y2="386" stroke="#06b6d4" stroke-width="1" stroke-dasharray="3,3" opacity=".5"/>
+        <text x="234" y="418" fill="#475569" font-size="8" font-family="Inter">reads</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 2 — OVERVIEW
+══════════════════════════════════════════════════ -->
+<div class="slide" id="s2">
+  <div class="slide-head">
+    <div class="eyebrow">Section 01 — Overview</div>
+    <h2 class="slide-title">What is the <span class="grd">Split-Brain</span> Knowledge Base?</h2>
+    <p class="slide-sub">One central repo — two distinct domains. Product Owners and AI agents read business logic. Developers and Copilot read technical contracts. Same source, zero confusion.</p>
+  </div>
+  <div class="body" style="padding-top:16px">
+    <!-- Big visual diagram showing the split -->
+    <svg viewBox="0 0 1180 440" width="100%" style="flex-shrink:0">
+      <defs>
+        <linearGradient id="lg-prod" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#8b5cf6"/></linearGradient>
+        <linearGradient id="lg-eng"  x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient>
+        <marker id="ma" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3z" fill="#6366f1" opacity=".8"/></marker>
+        <marker id="mb" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3z" fill="#10b981" opacity=".8"/></marker>
+        <marker id="mc" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3z" fill="#f59e0b" opacity=".8"/></marker>
+        <filter id="s"><feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#6366f1" flood-opacity=".25"/></filter>
+      </defs>
+
+      <!-- Central KB box -->
+      <rect x="460" y="150" width="260" height="130" rx="16" fill="#161625" stroke="#6366f1" stroke-width="2" filter="url(#s)"/>
+      <rect x="460" y="150" width="260" height="36" rx="16" fill="url(#lg-prod)" opacity=".15"/>
+      <rect x="460" y="166" width="260" height="20" rx="0" fill="url(#lg-prod)" opacity=".15"/>
+      <text x="590" y="172" fill="#818cf8" font-size="12" font-weight="800" text-anchor="middle" font-family="Inter">mfe-knowledge-base</text>
+      <text x="590" y="190" fill="#64748b" font-size="10" text-anchor="middle" font-family="Inter">Central Repository — Single Source of Truth</text>
+      <!-- product dir -->
+      <rect x="476" y="202" width="104" height="60" rx="8" fill="rgba(99,102,241,.12)" stroke="rgba(99,102,241,.3)" stroke-width="1"/>
+      <text x="528" y="222" fill="#818cf8" font-size="10" font-weight="700" text-anchor="middle" font-family="Inter">product/</text>
+      <text x="528" y="237" fill="#475569" font-size="9" text-anchor="middle" font-family="Inter">capabilities/*.md</text>
+      <text x="528" y="251" fill="#475569" font-size="9" text-anchor="middle" font-family="Inter">master-domain-matrix.md</text>
+      <!-- engineering dir -->
+      <rect x="600" y="202" width="104" height="60" rx="8" fill="rgba(16,185,129,.1)" stroke="rgba(16,185,129,.25)" stroke-width="1"/>
+      <text x="652" y="222" fill="#10b981" font-size="10" font-weight="700" text-anchor="middle" font-family="Inter">engineering/</text>
+      <text x="652" y="237" fill="#475569" font-size="9" text-anchor="middle" font-family="Inter">contracts/*.md</text>
+      <text x="652" y="251" fill="#475569" font-size="9" text-anchor="middle" font-family="Inter">index.md</text>
+
+      <!-- ── LEFT SIDE: SPOKE REPOS ── -->
+      <!-- Repo 1 -->
+      <rect x="30" y="60"  width="160" height="50" rx="9" fill="#0f0f1a" stroke="#252540" stroke-width="1"/>
+      <text x="110" y="81" fill="#94a3b8" font-size="10" font-weight="600" text-anchor="middle" font-family="Inter">mfe-billing-portal</text>
+      <text x="110" y="97" fill="#6366f1" font-size="8.5" text-anchor="middle" font-family="Inter">⚛ React 18 + RTK</text>
+      <!-- Repo 2 -->
+      <rect x="30" y="135" width="160" height="50" rx="9" fill="#0f0f1a" stroke="#252540" stroke-width="1"/>
+      <text x="110" y="156" fill="#94a3b8" font-size="10" font-weight="600" text-anchor="middle" font-family="Inter">mfe-user-settings</text>
+      <text x="110" y="172" fill="#6366f1" font-size="8.5" text-anchor="middle" font-family="Inter">⚛ React 18 + RTK</text>
+      <!-- Repo 3 -->
+      <rect x="30" y="210" width="160" height="50" rx="9" fill="#0f0f1a" stroke="#252540" stroke-width="1"/>
+      <text x="110" y="231" fill="#94a3b8" font-size="10" font-weight="600" text-anchor="middle" font-family="Inter">backend-core-api</text>
+      <text x="110" y="247" fill="#f59e0b" font-size="8.5" text-anchor="middle" font-family="Inter">☕ Java Spring Boot</text>
+      <!-- more -->
+      <rect x="30" y="285" width="160" height="50" rx="9" fill="#0f0f1a" stroke="#1e1e30" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="110" y="316" fill="#334155" font-size="9.5" text-anchor="middle" font-family="Inter">+ 27 more spoke repos</text>
+
+      <!-- Arrows: spokes → central (left side) -->
+      <path d="M190,85 Q320,85 460,215" stroke="#6366f1" stroke-width="1.3" stroke-dasharray="6,3" fill="none" marker-end="url(#ma)" class="flow-line"/>
+      <path d="M190,160 Q360,155 460,220" stroke="#6366f1" stroke-width="1.3" stroke-dasharray="6,3" fill="none" marker-end="url(#ma)" class="flow-line"/>
+      <path d="M190,235 Q360,235 460,235" stroke="#f59e0b" stroke-width="1.3" stroke-dasharray="6,3" fill="none" marker-end="url(#mc)" class="flow-line"/>
+
+      <text x="310" y="125" fill="#334155" font-size="9" text-anchor="middle" font-family="Inter">sync on release tag</text>
+
+      <!-- ── RIGHT SIDE: CONSUMERS ── -->
+      <!-- PO Agent -->
+      <rect x="990" y="60"  width="170" height="80" rx="9" fill="#0f0f1a" stroke="rgba(139,92,246,.4)" stroke-width="1"/>
+      <text x="1075" y="86" fill="#a78bfa" font-size="13" text-anchor="middle" font-family="Inter">🤖</text>
+      <text x="1075" y="104" fill="#94a3b8" font-size="10" font-weight="700" text-anchor="middle" font-family="Inter">PO AI Agent</text>
+      <text x="1075" y="120" fill="#475569" font-size="8.5" text-anchor="middle" font-family="Inter">Generates Jira stories</text>
+      <text x="1075" y="133" fill="#475569" font-size="8.5" text-anchor="middle" font-family="Inter">from capabilities/</text>
+
+      <!-- Dev Copilot -->
+      <rect x="990" y="170" width="170" height="80" rx="9" fill="#0f0f1a" stroke="rgba(16,185,129,.35)" stroke-width="1"/>
+      <text x="1075" y="196" fill="#34d399" font-size="13" text-anchor="middle" font-family="Inter">💻</text>
+      <text x="1075" y="214" fill="#94a3b8" font-size="10" font-weight="700" text-anchor="middle" font-family="Inter">Dev Copilot Business</text>
+      <text x="1075" y="230" fill="#475569" font-size="8.5" text-anchor="middle" font-family="Inter">Reads engineering/</text>
+      <text x="1075" y="243" fill="#475569" font-size="8.5" text-anchor="middle" font-family="Inter">contracts in VS Code</text>
+
+      <!-- Lead Arch -->
+      <rect x="990" y="280" width="170" height="80" rx="9" fill="#0f0f1a" stroke="rgba(245,158,11,.35)" stroke-width="1"/>
+      <text x="1075" y="306" fill="#fbbf24" font-size="13" text-anchor="middle" font-family="Inter">🏛️</text>
+      <text x="1075" y="324" fill="#94a3b8" font-size="10" font-weight="700" text-anchor="middle" font-family="Inter">Lead Architect</text>
+      <text x="1075" y="340" fill="#475569" font-size="8.5" text-anchor="middle" font-family="Inter">Reviews & merges PRs</text>
+      <text x="1075" y="353" fill="#475569" font-size="8.5" text-anchor="middle" font-family="Inter">Master domain matrix</text>
+
+      <!-- Arrows: central → consumers -->
+      <path d="M720,220 Q855,200 990,100" stroke="#8b5cf6" stroke-width="1.3" stroke-dasharray="6,3" fill="none" marker-end="url(#ma)" class="flow-line"/>
+      <path d="M720,232 Q855,225 990,210" stroke="#10b981" stroke-width="1.3" stroke-dasharray="6,3" fill="none" marker-end="url(#mb)" class="flow-line"/>
+      <path d="M720,245 Q855,270 990,320" stroke="#f59e0b" stroke-width="1.3" stroke-dasharray="6,3" fill="none" marker-end="url(#mc)" class="flow-line"/>
+
+      <text x="860" y="190" fill="#334155" font-size="9" text-anchor="middle" font-family="Inter">reads product/</text>
+      <text x="860" y="250" fill="#334155" font-size="9" text-anchor="middle" font-family="Inter">reads engineering/</text>
+
+      <!-- Bottom labels -->
+      <text x="110"  y="370" fill="#334155" font-size="10" font-weight="600" text-anchor="middle" font-family="Inter">SPOKE REPOSITORIES</text>
+      <text x="590"  y="310" fill="#334155" font-size="10" font-weight="600" text-anchor="middle" font-family="Inter">CENTRAL KB</text>
+      <text x="1075" y="395" fill="#334155" font-size="10" font-weight="600" text-anchor="middle" font-family="Inter">CONSUMERS</text>
+    </svg>
+
+    <!-- Bottom chips row -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;padding:0 4px">
+      <span class="chip chip-i">🔄 Release-Cadence Sync</span>
+      <span class="chip chip-g">🤖 Auto-Generated Matrix</span>
+      <span class="chip chip-c">💲 Zero CI/CD LLM Cost</span>
+      <span class="chip chip-a">🛡️ Self-Maintaining Instructions</span>
+      <span class="chip chip-r">📐 Stack-Aware Bootstrapping</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 3 — BENEFITS
+══════════════════════════════════════════════════ -->
+<div class="slide" id="s3">
+  <div class="slide-head">
+    <div class="eyebrow">Section 02 — Benefits</div>
+    <h2 class="slide-title">Why This <span class="grd">Workflow?</span></h2>
+    <p class="slide-sub">Strategic advantages for architects managing large-scale, distributed micro-frontend ecosystems.</p>
+  </div>
+  <div class="body" style="padding-top:12px;align-items:stretch">
+
+    <!-- Left column: visual benefits -->
+    <div style="flex:1.4;display:flex;flex-direction:column;gap:12px">
+
+      <!-- Benefit cards with visual icons -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1">
+        <div style="background:var(--surf2);border:1px solid var(--edge);border-radius:14px;padding:18px 20px;border-left:3px solid #6366f1">
+          <div style="font-size:26px;margin-bottom:8px">🚫</div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:5px">Zero CI/CD LLM Keys</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.5">Documentation updates stay completely out of your PR pipeline. Developers use existing GitHub Copilot Business licenses locally — no API keys, no runner costs.</div>
+        </div>
+        <div style="background:var(--surf2);border:1px solid var(--edge);border-radius:14px;padding:18px 20px;border-left:3px solid #10b981">
+          <div style="font-size:26px;margin-bottom:8px">🎯</div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:5px">Release-Gated Discipline</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.5">Docs sync only at release boundaries (v1→v2). No noise on every PR — contracts are guaranteed accurate at every published version.</div>
+        </div>
+        <div style="background:var(--surf2);border:1px solid var(--edge);border-radius:14px;padding:18px 20px;border-left:3px solid #8b5cf6">
+          <div style="font-size:26px;margin-bottom:8px">🔄</div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:5px">Self-Maintaining Instructions</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.5">Copilot is instructed to auto-update its own instructions whenever Redux state, REST endpoints, or API contracts change. Zero documentation drift.</div>
+        </div>
+        <div style="background:var(--surf2);border:1px solid var(--edge);border-radius:14px;padding:18px 20px;border-left:3px solid #f59e0b">
+          <div style="font-size:26px;margin-bottom:8px">⚡</div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:5px">60-Second Bootstrap</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.5">One Python script auto-detects React-Redux, Java Spring Boot, or Apigee and scaffolds all Copilot instructions, prompt files, and Git hooks instantly.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right column: cost infographic -->
+    <div style="flex:0.9;display:flex;flex-direction:column;gap:14px">
+      <div style="background:var(--surf2);border:1px solid var(--edge);border-radius:16px;padding:22px">
+        <div style="font-size:11px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:18px">💰 Daily LLM Cost Comparison</div>
+
+        <!-- Visual bars -->
+        <div style="margin-bottom:18px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:12px;color:var(--muted)">Monolithic (per-PR)</span>
+            <span style="font-size:12px;font-weight:700;color:#f43f5e">$120/day</span>
+          </div>
+          <div class="pbar-track">
+            <div class="pbar-fill" style="--w:100%;width:0;background:linear-gradient(90deg,#f43f5e,#fb7185)"></div>
+          </div>
+          <div style="font-size:10px;color:var(--dim);margin-top:3px">24,000,000 tokens · 120 daily pushes</div>
+        </div>
+        <div style="margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:12px;color:var(--muted)">Memoized delta sync</span>
+            <span style="font-size:12px;font-weight:700;color:#10b981">$22.20/day</span>
+          </div>
+          <div class="pbar-track">
+            <div class="pbar-fill" style="--w:18.5%;width:0;background:linear-gradient(90deg,#10b981,#06b6d4)"></div>
+          </div>
+          <div style="font-size:10px;color:var(--dim);margin-top:3px">4,440,000 tokens · 81.5% cache hit rate</div>
+        </div>
+
+        <div style="background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:12px;margin-top:14px;text-align:center">
+          <div style="font-size:38px;font-weight:900;background:linear-gradient(120deg,#10b981,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:2px">81.5%</div>
+          <div style="font-size:11px;color:var(--muted)">token reduction via AST-delta memoization</div>
+          <div style="font-size:10px;color:var(--dim);margin-top:3px">Only files with changed public contracts are processed</div>
+        </div>
+      </div>
+
+      <div style="background:var(--surf2);border:1px solid var(--edge);border-radius:14px;padding:18px 20px">
+        <div style="font-size:11px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px">🧮 Topological Propagation (DAG)</div>
+        <svg viewBox="0 0 300 90" width="100%" style="display:block">
+          <defs><marker id="dg" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3z" fill="#10b981"/></marker></defs>
+          <!-- nodes -->
+          <rect x="0"   y="30" width="80" height="30" rx="7" fill="#0f0f1a" stroke="#f59e0b" stroke-width="1"/>
+          <text x="40" y="49" fill="#f59e0b" font-size="9" font-weight="600" text-anchor="middle" font-family="Inter">DB Entity / State</text>
+          <rect x="110" y="10" width="80" height="30" rx="7" fill="#0f0f1a" stroke="#6366f1" stroke-width="1"/>
+          <text x="150" y="29" fill="#818cf8" font-size="9" font-weight="600" text-anchor="middle" font-family="Inter">engineering/contracts</text>
+          <rect x="110" y="50" width="80" height="30" rx="7" fill="#0f0f1a" stroke="#6366f1" stroke-width="1"/>
+          <text x="150" y="69" fill="#818cf8" font-size="9" font-weight="600" text-anchor="middle" font-family="Inter">product/capabilities</text>
+          <rect x="220" y="30" width="80" height="30" rx="7" fill="#0f0f1a" stroke="#10b981" stroke-width="1"/>
+          <text x="260" y="49" fill="#10b981" font-size="9" font-weight="600" text-anchor="middle" font-family="Inter">UI Components</text>
+          <!-- edges -->
+          <line x1="80" y1="40" x2="110" y2="25" stroke="#6366f1" stroke-width="1" marker-end="url(#dg)"/>
+          <line x1="80" y1="50" x2="110" y2="65" stroke="#6366f1" stroke-width="1" marker-end="url(#dg)"/>
+          <line x1="190" y1="25" x2="220" y2="40" stroke="#10b981" stroke-width="1" marker-end="url(#dg)"/>
+          <line x1="190" y1="65" x2="220" y2="50" stroke="#10b981" stroke-width="1" marker-end="url(#dg)"/>
+          <text x="150" y="88" fill="#334155" font-size="8" text-anchor="middle" font-family="Inter">Kahn's Algorithm — low-level contracts processed first</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 4 — HOW IT WORKS: PIPELINE
+══════════════════════════════════════════════════ -->
+<div class="slide" id="s4">
+  <div class="slide-head">
+    <div class="eyebrow">Section 03A — How It Works</div>
+    <h2 class="slide-title">The Release Sync <span class="grd">Pipeline</span></h2>
+    <p class="slide-sub">7 steps — from code change to fully synchronized central Knowledge Base. Triggered only when a release tag is published.</p>
+  </div>
+  <div class="body" style="flex-direction:column;gap:10px;padding-top:10px">
+
+    <!-- Horizontal pipeline visual -->
+    <svg viewBox="0 0 1160 110" width="100%" style="flex-shrink:0;overflow:visible">
+      <defs>
+        <marker id="pa" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3z" fill="#6366f1"/></marker>
+        <linearGradient id="step-g1" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#8b5cf6"/></linearGradient>
+        <linearGradient id="step-g2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#f97316"/></linearGradient>
+        <linearGradient id="step-g3" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient>
+      </defs>
+
+      <!-- Flow line -->
+      <line x1="62" y1="55" x2="1100" y2="55" stroke="#252540" stroke-width="1.5"/>
+      <line x1="62" y1="55" x2="1100" y2="55" stroke="url(#step-g1)" stroke-width="1.5" stroke-dasharray="8,4" class="flow-line" opacity=".6"/>
+
+      <!-- Steps -->
+      <!-- 1 -->
+      <circle cx="62"  cy="55" r="26" fill="url(#step-g1)" filter="url(#s)"/>
+      <text x="62"  y="50" font-size="16" text-anchor="middle" font-family="Inter">🏷️</text>
+      <text x="62"  y="66" fill="white" font-size="9" font-weight="700" text-anchor="middle" font-family="Inter">RELEASE</text>
+      <text x="62"  y="94" fill="#64748b" font-size="8.5" text-anchor="middle" font-family="Inter">Spoke Repo</text>
+      <text x="62"  y="106" fill="#64748b" font-size="8.5" text-anchor="middle" font-family="Inter">finalizes v2.0.0</text>
+
+      <!-- 2 -->
+      <circle cx="228" cy="55" r="26" fill="url(#step-g1)"/>
+      <text x="228" y="50" font-size="16" text-anchor="middle" font-family="Inter">🔍</text>
+      <text x="228" y="66" fill="white" font-size="9" font-weight="700" text-anchor="middle" font-family="Inter">DIFF</text>
+      <text x="228" y="94" fill="#64748b" font-size="8.5" text-anchor="middle" font-family="Inter">git diff v1→v2</text>
+      <text x="228" y="106" fill="#64748b" font-size="8.5" text-anchor="middle" font-family="Inter">Repomix pack</text>
+
+      <!-- 3 -->
+      <circle cx="394" cy="55" r="26" fill="url(#step-g2)"/>
+      <text x="394" y="50" font-size="16" text-anchor="middle" font-family="Inter">🤖</text>
+      <text x="394" y="66" fill="white" font-size="9" font-weight="700" text-anchor="middle" font-family="Inter">RECONCILE</text>
+      <text x="394" y="94" fill="#64748b" font-size="8.5" text-anchor="middle" font-family="Inter">/reconcile-release</text>
+      <text x="394" y="106" fill="#64748b" font-size="8.5" text-anchor="middle" font-family="Inter">Copilot Edits local</text>
+
+      <!-- 4 -->
+      <circle cx="560" cy="55" r="26" fill="url(#step-g2)"/>
+      <text x="560" y="50" font-size="16" text-anchor="middle" font-family="Inter">✅</text>
+      <text x="560" y="66" fill="white" font-size="9" font-weight="700" text-anchor="middle" font-family="Inter">COMMIT</text>
+      <text x="560" y="94" fill="#64748b" font-size="8.5" text-anchor="middle" font-family="Inter">Accept & commit</text>
+      <text x="560" y="106" fill="#64748b" font-size="8.5" text-anchor="middle" font-family="Inter">Push tag v2.0.0</text>
+
+      <!-- 5 -->
+      <circle cx="726" cy="55" r="26" fill="url(#step-g3)"/>
+      <text x="726" y="50" font-size="16" text-anchor="middle" font-family="Inter">⚙️</text>
+      <text x="726" y="66" fill="white" font-size="9" font-weight="700" text-anchor="middle" font-family="Inter">ACTION</text>
+      <text x="726" y="94" fill="#64748b" font-size="8.5" text-anchor="middle" font-family="Inter">GitHub Action fires</text>
+      <text x="726" y="106" fill="#64748b" font-size="8.5" text-anchor="middle" font-family="Inter">on v* tag push</text>
+
+      <!-- 6 -->
+      <circle cx="892" cy="55" r="26" fill="url(#step-g3)"/>
+      <text x="892" y="50" font-size="16" text-anchor="middle" font-family="Inter">📬</text>
+      <text x="892" y="66" fill="white" font-size="9" font-weight="700" text-anchor="middle" font-family="Inter">PR OPENED</text>
+      <text x="892" y="94" fill="#64748b" font-size="8.5" text-anchor="middle" font-family="Inter">Files copied to KB</text>
+      <text x="892" y="106" fill="#64748b" font-size="8.5" text-anchor="middle" font-family="Inter">Auto PR created</text>
+
+      <!-- 7 -->
+      <circle cx="1100" cy="55" r="30" fill="#10b981" filter="url(#s)"/>
+      <text x="1100" y="50" font-size="16" text-anchor="middle" font-family="Inter">🎯</text>
+      <text x="1100" y="67" fill="white" font-size="9" font-weight="700" text-anchor="middle" font-family="Inter">KB SYNCED</text>
+      <text x="1100" y="95"  fill="#64748b" font-size="8.5" text-anchor="middle" font-family="Inter">Lead merges PR</text>
+      <text x="1100" y="107" fill="#64748b" font-size="8.5" text-anchor="middle" font-family="Inter">Matrix auto-rebuilt ✓</text>
+
+      <!-- Phase labels -->
+      <rect x="14"  y="14" width="100" height="14" rx="4" fill="rgba(99,102,241,.15)"/>
+      <text x="64"  y="24" fill="#818cf8" font-size="8" font-weight="700" text-anchor="middle" font-family="Inter">① DEVELOPER LOCAL</text>
+      <rect x="180" y="14" width="250" height="14" rx="4" fill="rgba(245,158,11,.1)"/>
+      <text x="305" y="24" fill="#fbbf24" font-size="8" font-weight="700" text-anchor="middle" font-family="Inter">② COPILOT RECONCILIATION (LOCAL — FREE)</text>
+      <rect x="678" y="14" width="250" height="14" rx="4" fill="rgba(16,185,129,.1)"/>
+      <text x="803" y="24" fill="#34d399" font-size="8" font-weight="700" text-anchor="middle" font-family="Inter">③ AUTOMATED GITHUB ACTIONS (FREE)</text>
+      <rect x="1062" y="14" width="76" height="14" rx="4" fill="rgba(16,185,129,.15)"/>
+      <text x="1100" y="24" fill="#34d399" font-size="8" font-weight="700" text-anchor="middle" font-family="Inter">④ COMPLETE</text>
+    </svg>
+
+    <!-- Detail cards for key steps -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;flex:1">
+
+      <div style="background:var(--surf2);border:1px solid var(--edge);border-radius:12px;padding:16px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">🔍</div>
+          <div style="font-size:12px;font-weight:700">Delta Generation</div>
+        </div>
+        <div style="background:rgba(0,0,0,.3);border-radius:8px;padding:10px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#10b981;line-height:1.7">
+          <span style="color:#475569"># Get changed files</span><br>
+          git diff v1..HEAD<br>&nbsp;&nbsp;--name-only<br>&nbsp;&nbsp;| grep -E '.ts|.java'<br>&nbsp;&nbsp;| repomix --stdin
+        </div>
+      </div>
+
+      <div style="background:var(--surf2);border:1px solid var(--edge);border-radius:12px;padding:16px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#f97316);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">🤖</div>
+          <div style="font-size:12px;font-weight:700">Local Copilot Reconcile</div>
+        </div>
+        <div style="font-size:11.5px;color:var(--muted);line-height:1.55">Copilot Edits analyzes the packed delta XML and <strong style="color:var(--text)">surgically updates</strong> only changed sections in <span style="color:#818cf8">copilot-instructions.md</span> and <span style="color:#818cf8">product-capabilities.md</span>. No full rewrites.</div>
+      </div>
+
+      <div style="background:var(--surf2);border:1px solid var(--edge);border-radius:12px;padding:16px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#10b981,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">⚙️</div>
+          <div style="font-size:12px;font-weight:700">GitHub Action (Free)</div>
+        </div>
+        <div style="font-size:11.5px;color:var(--muted);line-height:1.55">
+          <strong style="color:#34d399">sync-release-kb.yml</strong> triggers on tag push. Checks out both repos, copies files, opens a PR on the central KB. Requires only a fine-grained PAT — <strong style="color:var(--text)">no LLM keys</strong>.
+        </div>
+      </div>
+
+      <div style="background:var(--surf2);border:1px solid var(--edge);border-radius:12px;padding:16px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#10b981,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">🐍</div>
+          <div style="font-size:12px;font-weight:700">Matrix Auto-Rebuild</div>
+        </div>
+        <div style="font-size:11.5px;color:var(--muted);line-height:1.55">
+          On PR merge, <strong style="color:#34d399">rebuild-domain-matrix.yml</strong> runs a Python parser that aggregates all <span style="color:#818cf8">product/capabilities/*.md</span> files into the Master Domain Matrix table — automatically committed to main.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 5 — SETUP GUIDE
+══════════════════════════════════════════════════ -->
+<div class="slide" id="s5">
+  <div class="slide-head">
+    <div class="eyebrow">Section 03B — Setup</div>
+    <h2 class="slide-title">Cold-Start <span class="grd">Setup Guide</span></h2>
+    <p class="slide-sub">Three distinct phases to go from zero to a fully operational Agentic Agile Knowledge Base across your entire repo ecosystem.</p>
+  </div>
+  <div class="body" style="padding-top:12px">
+
+    <!-- Phase timeline visual -->
+    <div style="width:100%;display:flex;flex-direction:column;gap:12px">
+
+      <!-- Timeline bar -->
+      <svg viewBox="0 0 1060 60" width="100%" style="flex-shrink:0">
+        <defs>
+          <linearGradient id="tl1" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#6366f1"/><stop offset="33%" stop-color="#6366f1"/>
+            <stop offset="33%" stop-color="#10b981"/><stop offset="66%" stop-color="#10b981"/>
+            <stop offset="66%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#f59e0b"/>
+          </linearGradient>
+        </defs>
+        <!-- track -->
+        <rect x="30" y="25" width="1000" height="6" rx="3" fill="#252540"/>
+        <rect x="30" y="25" width="1000" height="6" rx="3" fill="url(#tl1)" opacity=".7"/>
+        <!-- phase 1 node -->
+        <circle cx="30"  cy="28" r="12" fill="#6366f1"/>
+        <text x="30"  y="32" fill="white" font-size="9" font-weight="800" text-anchor="middle" font-family="Inter">P1</text>
+        <!-- phase 2 node -->
+        <circle cx="363" cy="28" r="12" fill="#10b981"/>
+        <text x="363" y="32" fill="white" font-size="9" font-weight="800" text-anchor="middle" font-family="Inter">P2</text>
+        <!-- phase 3 node -->
+        <circle cx="696" cy="28" r="12" fill="#f59e0b"/>
+        <text x="696" y="32" fill="white" font-size="9" font-weight="800" text-anchor="middle" font-family="Inter">P3</text>
+        <!-- end -->
+        <circle cx="1030" cy="28" r="12" fill="#10b981" stroke="#34d399" stroke-width="1.5"/>
+        <text x="1030" y="32" fill="white" font-size="11" text-anchor="middle" font-family="Inter">✓</text>
+        <!-- labels -->
+        <text x="30"  y="52" fill="#818cf8" font-size="9.5" font-weight="700" text-anchor="middle" font-family="Inter">BOOTSTRAP</text>
+        <text x="363" y="52" fill="#34d399" font-size="9.5" font-weight="700" text-anchor="middle" font-family="Inter">INITIAL CONTENT</text>
+        <text x="696" y="52" fill="#fbbf24" font-size="9.5" font-weight="700" text-anchor="middle" font-family="Inter">ONGOING CADENCE</text>
+        <text x="1030" y="52" fill="#34d399" font-size="9.5" font-weight="700" text-anchor="middle" font-family="Inter">OPERATIONAL</text>
+        <!-- timing labels -->
+        <text x="196" y="18" fill="#334155" font-size="8.5" text-anchor="middle" font-family="Inter">One-time · Lead Architect</text>
+        <text x="530" y="18" fill="#334155" font-size="8.5" text-anchor="middle" font-family="Inter">Per-repo · Dev Lead</text>
+        <text x="863" y="18" fill="#334155" font-size="8.5" text-anchor="middle" font-family="Inter">Per-release · Dev + Arch</text>
+      </svg>
+
+      <!-- Phase cards -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;flex:1">
+
+        <!-- Phase 1 -->
+        <div style="background:var(--surf2);border:1px solid var(--edge);border-top:3px solid #6366f1;border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;background:rgba(99,102,241,.15);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px">🏗️</div>
+            <div><div style="font-size:13px;font-weight:700">Phase 1: Bootstrap</div><div style="font-size:10px;color:var(--dim)">One-time · Architects</div></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <span style="background:#6366f1;color:white;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;flex-shrink:0;margin-top:1px">1</span>
+              <span style="font-size:11.5px;color:var(--muted);line-height:1.4">Create <strong style="color:var(--text)">mfe-knowledge-base</strong> repo with <code style="color:#818cf8;font-size:10px">product/</code> and <code style="color:#10b981;font-size:10px">engineering/</code> dirs</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <span style="background:#6366f1;color:white;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;flex-shrink:0;margin-top:1px">2</span>
+              <span style="font-size:11.5px;color:var(--muted);line-height:1.4">Run <code style="color:#10b981;font-size:10px">bootstrap-agentic-agile.py</code> in each Spoke — auto-detects stack, scaffolds all Copilot instruction files</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <span style="background:#6366f1;color:white;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;flex-shrink:0;margin-top:1px">3</span>
+              <span style="font-size:11.5px;color:var(--muted);line-height:1.4">Deploy <strong style="color:var(--text)">sync-release-kb.yml</strong> to every Spoke repo; store <code style="color:#f59e0b;font-size:10px">ORGANIZATION_KB_SYNC_TOKEN</code> as org secret</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <span style="background:#6366f1;color:white;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;flex-shrink:0;margin-top:1px">4</span>
+              <span style="font-size:11.5px;color:var(--muted);line-height:1.4">Deploy <strong style="color:var(--text)">rebuild-domain-matrix.yml</strong> to central KB with <code style="color:#818cf8;font-size:10px">contents:write</code> permission</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase 2 -->
+        <div style="background:var(--surf2);border:1px solid var(--edge);border-top:3px solid #10b981;border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;background:rgba(16,185,129,.12);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px">✍️</div>
+            <div><div style="font-size:13px;font-weight:700">Phase 2: Initial Content</div><div style="font-size:10px;color:var(--dim)">Per-repo · Dev Lead</div></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <span style="background:#10b981;color:white;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;flex-shrink:0;margin-top:1px">1</span>
+              <span style="font-size:11.5px;color:var(--muted);line-height:1.4">Open <strong style="color:var(--text)">vantage-workspace.code-workspace</strong> — links all Spoke repos + Central KB in one VS Code window</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <span style="background:#10b981;color:white;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;flex-shrink:0;margin-top:1px">2</span>
+              <span style="font-size:11.5px;color:var(--muted);line-height:1.4">Switch to <strong style="color:var(--text)">Copilot Edits</strong> <code style="color:#818cf8;font-size:10px">Ctrl+Shift+Alt+I</code>; add empty KB files to Working Set</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <span style="background:#10b981;color:white;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;flex-shrink:0;margin-top:1px">3</span>
+              <span style="font-size:11.5px;color:var(--muted);line-height:1.4">Run <strong style="color:var(--text)">Cold-Start Prompt</strong> with <code style="color:#10b981;font-size:10px">@workspace</code> — Copilot generates capabilities and contracts from codebase</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <span style="background:#10b981;color:white;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;flex-shrink:0;margin-top:1px">4</span>
+              <span style="font-size:11.5px;color:var(--muted);line-height:1.4">Review inline diffs → <strong style="color:var(--text)">Accept → Commit → Push</strong> to main. Matrix auto-compiles on merge.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase 3 -->
+        <div style="background:var(--surf2);border:1px solid var(--edge);border-top:3px solid #f59e0b;border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;background:rgba(245,158,11,.1);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px">🔄</div>
+            <div><div style="font-size:13px;font-weight:700">Phase 3: Ongoing Cadence</div><div style="font-size:10px;color:var(--dim)">Per-release · Dev Lead + Arch</div></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <span style="background:#f59e0b;color:white;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;flex-shrink:0;margin-top:1px">1</span>
+              <span style="font-size:11.5px;color:var(--muted);line-height:1.4">Generate release delta: <code style="color:#10b981;font-size:10px">git diff v1..HEAD | repomix --stdin</code> — pack only changed structural files</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <span style="background:#f59e0b;color:white;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;flex-shrink:0;margin-top:1px">2</span>
+              <span style="font-size:11.5px;color:var(--muted);line-height:1.4">Run <code style="color:#818cf8;font-size:10px">/reconcile-release</code> in Copilot Edits — surgically updates only affected sections</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <span style="background:#f59e0b;color:white;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;flex-shrink:0;margin-top:1px">3</span>
+              <span style="font-size:11.5px;color:var(--muted);line-height:1.4">Accept → Commit docs → Push release tag. GitHub Action fires automatically, copies files, opens KB PR</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:flex-start">
+              <span style="background:#f59e0b;color:white;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;flex-shrink:0;margin-top:1px">4</span>
+              <span style="font-size:11.5px;color:var(--muted);line-height:1.4"><strong style="color:var(--text)">Lead Architect merges PR</strong> → Python aggregator auto-rebuilds Master Domain Matrix ✓</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 6 — DRIFT PREVENTION
+══════════════════════════════════════════════════ -->
+<div class="slide" id="s6">
+  <div class="slide-head">
+    <div class="eyebrow">Section 03C — Prevention</div>
+    <h2 class="slide-title">Drift Prevention <span class="grd">Alternatives</span></h2>
+    <p class="slide-sub">Shift documentation alignment from post-hoc detection to proactive prevention. Three strategies — choose by team maturity.</p>
+  </div>
+  <div class="body" style="padding-top:12px;flex-direction:column;gap:14px">
+
+    <!-- Shift-left visual -->
+    <svg viewBox="0 0 1060 68" width="100%" style="flex-shrink:0">
+      <defs>
+        <linearGradient id="shiftleft" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#10b981"/>
+          <stop offset="60%" stop-color="#f59e0b"/>
+          <stop offset="100%" stop-color="#f43f5e"/>
+        </linearGradient>
+        <marker id="sal" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3z" fill="#10b981"/></marker>
+      </defs>
+
+      <rect x="0" y="22" width="1060" height="8" rx="4" fill="#1e1e30"/>
+      <rect x="0" y="22" width="1060" height="8" rx="4" fill="url(#shiftleft)" opacity=".7"/>
+
+      <!-- Markers on the track -->
+      <circle cx="130"  cy="26" r="16" fill="#161625" stroke="#10b981" stroke-width="2"/>
+      <text x="130"  y="30" fill="#10b981" font-size="14" text-anchor="middle" font-family="Inter">🖥️</text>
+      <circle cx="440"  cy="26" r="16" fill="#161625" stroke="#f59e0b" stroke-width="2"/>
+      <text x="440"  y="30" fill="#f59e0b" font-size="14" text-anchor="middle" font-family="Inter">🤖</text>
+      <circle cx="750"  cy="26" r="16" fill="#161625" stroke="#f59e0b" stroke-width="2"/>
+      <text x="750"  y="30" fill="#f59e0b" font-size="14" text-anchor="middle" font-family="Inter">🔌</text>
+      <circle cx="1010" cy="26" r="16" fill="#161625" stroke="#f43f5e" stroke-width="2"/>
+      <text x="1010" y="30" fill="#f43f5e" font-size="14" text-anchor="middle" font-family="Inter">🚨</text>
+
+      <text x="130"  y="56" fill="#10b981" font-size="9"  font-weight="700" text-anchor="middle" font-family="Inter">Alt 1 — Pre-commit</text>
+      <text x="440"  y="56" fill="#fbbf24" font-size="9"  font-weight="700" text-anchor="middle" font-family="Inter">Alt 2 — RepoAgent</text>
+      <text x="750"  y="56" fill="#fbbf24" font-size="9"  font-weight="700" text-anchor="middle" font-family="Inter">Alt 3 — Contract Testing</text>
+      <text x="1010" y="56" fill="#f43f5e" font-size="9"  font-weight="700" text-anchor="middle" font-family="Inter">Post-hoc CI Gate</text>
+
+      <text x="10"  y="14" fill="#10b981" font-size="9" font-weight="700" font-family="Inter">← SHIFT LEFT (PREVENT)</text>
+      <text x="900" y="14" fill="#f43f5e" font-size="9" font-weight="700" font-family="Inter">DETECT AFTER MERGE →</text>
+    </svg>
+
+    <!-- Three alt cards -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;flex:1">
+
+      <!-- Alt 1 -->
+      <div style="background:var(--surf2);border:1px solid var(--edge);border-top:3px solid #10b981;border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--edge)">
+          <div style="width:38px;height:38px;background:rgba(16,185,129,.12);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px">🖥️</div>
+          <div>
+            <div style="font-size:13px;font-weight:700">Pre-commit Gate</div>
+            <div style="font-size:10px;color:var(--dim)">Husky + lint-staged</div>
+          </div>
+          <span class="chip chip-g" style="margin-left:auto;font-size:9px">LOCAL</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.55">Aborts <code style="color:#10b981;font-size:10px">git commit</code> if a Redux slice changes without a matching update to <code style="color:#818cf8;font-size:10px">copilot-instructions.md</code> — catches drift before it leaves the machine.</div>
+        <div style="display:flex;flex-direction:column;gap:6px;flex:1">
+          <div style="display:flex;gap:7px;font-size:11px;color:var(--muted)"><span style="color:#10b981;font-size:13px">✓</span>Zero latency — local enforcement</div>
+          <div style="display:flex;gap:7px;font-size:11px;color:var(--muted)"><span style="color:#10b981;font-size:13px">✓</span>No CI/CD costs or dependencies</div>
+          <div style="display:flex;gap:7px;font-size:11px;color:var(--muted)"><span style="color:#10b981;font-size:13px">✓</span>Simple npm install setup</div>
+          <div style="display:flex;gap:7px;font-size:11px;color:var(--dim)"><span style="color:#f59e0b;font-size:13px">⚠</span>Can be bypassed with --no-verify</div>
+        </div>
+        <div style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.15);border-radius:8px;padding:10px;font-size:10.5px;color:var(--dim)">
+          <strong style="color:#34d399">Best for:</strong> Teams with strong discipline wanting minimal tooling overhead
+        </div>
+      </div>
+
+      <!-- Alt 2 -->
+      <div style="background:var(--surf2);border:1px solid var(--edge);border-top:3px solid #8b5cf6;border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--edge)">
+          <div style="width:38px;height:38px;background:rgba(139,92,246,.12);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px">🤖</div>
+          <div>
+            <div style="font-size:13px;font-weight:700">RepoAgent Auto-Sync</div>
+            <div style="font-size:10px;color:var(--dim)">AI-powered · Local LLM</div>
+          </div>
+          <span class="chip chip-i" style="margin-left:auto;font-size:9px">AUTO</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.55">Fully automated — RepoAgent detects code changes during commit, calls a local/private LLM, and directly updates markdown contracts. Docs committed atomically with code.</div>
+        <div style="display:flex;flex-direction:column;gap:6px;flex:1">
+          <div style="display:flex;gap:7px;font-size:11px;color:var(--muted)"><span style="color:#10b981;font-size:13px">✓</span>Zero developer effort required</div>
+          <div style="display:flex;gap:7px;font-size:11px;color:var(--muted)"><span style="color:#10b981;font-size:13px">✓</span>Supports private/local LLMs</div>
+          <div style="display:flex;gap:7px;font-size:11px;color:var(--muted)"><span style="color:#10b981;font-size:13px">✓</span>Atomic code + doc commits</div>
+          <div style="display:flex;gap:7px;font-size:11px;color:var(--dim)"><span style="color:#f59e0b;font-size:13px">⚠</span>Requires RepoAgent + LLM per dev</div>
+        </div>
+        <div style="background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.15);border-radius:8px;padding:10px;font-size:10.5px;color:var(--dim)">
+          <strong style="color:#a78bfa">Best for:</strong> Teams wanting maximum automation with zero manual steps
+        </div>
+      </div>
+
+      <!-- Alt 3 -->
+      <div style="background:var(--surf2);border:1px solid var(--edge);border-top:3px solid #f59e0b;border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--edge)">
+          <div style="width:38px;height:38px;background:rgba(245,158,11,.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px">🔌</div>
+          <div>
+            <div style="font-size:13px;font-weight:700">Bi-directional Contracts</div>
+            <div style="font-size:10px;color:var(--dim)">Pact / Specmatic</div>
+          </div>
+          <span class="chip chip-a" style="margin-left:auto;font-size:9px">GOLD STD</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.55">Validates React MFE API calls against Spring Boot OpenAPI schema via a local Specmatic mock server. Breaking changes fail the MFE test suite at compile time — no text comparison needed.</div>
+        <svg viewBox="0 0 280 36" width="100%" style="margin:4px 0">
+          <rect x="0"   y="8" width="120" height="22" rx="6" fill="rgba(99,102,241,.1)" stroke="#6366f1" stroke-width="1"/>
+          <text x="60"  y="22" fill="#818cf8" font-size="9" font-weight="600" text-anchor="middle" font-family="Inter">MFE Consumer (Pact JSON)</text>
+          <text x="140" y="22" fill="#475569" font-size="9" text-anchor="middle" font-family="Inter">↔</text>
+          <rect x="158" y="8" width="122" height="22" rx="6" fill="rgba(245,158,11,.08)" stroke="#f59e0b" stroke-width="1"/>
+          <text x="219" y="22" fill="#fbbf24" font-size="9" font-weight="600" text-anchor="middle" font-family="Inter">Spring Boot OpenAPI Schema</text>
+        </svg>
+        <div style="display:flex;flex-direction:column;gap:6px;flex:1">
+          <div style="display:flex;gap:7px;font-size:11px;color:var(--muted)"><span style="color:#10b981;font-size:13px">✓</span>Structural schema validation</div>
+          <div style="display:flex;gap:7px;font-size:11px;color:var(--muted)"><span style="color:#10b981;font-size:13px">✓</span>Breaking changes caught at compile</div>
+          <div style="display:flex;gap:7px;font-size:11px;color:var(--dim)"><span style="color:#f59e0b;font-size:13px">⚠</span>Requires OpenAPI-first discipline</div>
+        </div>
+        <div style="background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.15);border-radius:8px;padding:10px;font-size:10.5px;color:var(--dim)">
+          <strong style="color:#fbbf24">Best for:</strong> Mature teams wanting true structural contract enforcement
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 7 — SUMMARY DASHBOARD
+══════════════════════════════════════════════════ -->
+<div class="slide" id="s7">
+  <div class="slide-head">
+    <div class="eyebrow">For Architects & Leaders</div>
+    <h2 class="slide-title">Decision <span class="grd">Summary</span></h2>
+    <p class="slide-sub">Key metrics, principles, and supported stacks for leadership sign-off.</p>
+  </div>
+  <div class="body" style="flex-direction:column;gap:12px;padding-top:12px">
+
+    <!-- KPI strip -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:12px">
+      <div style="background:var(--surf2);border:1px solid var(--edge);border-radius:12px;padding:16px;text-align:center">
+        <div style="font-size:36px;font-weight:900;background:linear-gradient(120deg,#10b981,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1">81.5%</div>
+        <div style="font-size:10px;color:var(--dim);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.08em">Token Reduction</div>
+      </div>
+      <div style="background:var(--surf2);border:1px solid var(--edge);border-radius:12px;padding:16px;text-align:center">
+        <div style="font-size:36px;font-weight:900;color:#f59e0b;line-height:1">$0</div>
+        <div style="font-size:10px;color:var(--dim);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.08em">CI/CD LLM Cost</div>
+      </div>
+      <div style="background:var(--surf2);border:1px solid var(--edge);border-radius:12px;padding:16px;text-align:center">
+        <div style="font-size:36px;font-weight:900;background:linear-gradient(120deg,#6366f1,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1">30+</div>
+        <div style="font-size:10px;color:var(--dim);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.08em">Repo Scale</div>
+      </div>
+      <div style="background:var(--surf2);border:1px solid var(--edge);border-radius:12px;padding:16px;text-align:center">
+        <div style="font-size:36px;font-weight:900;color:#38bdf8;line-height:1">60s</div>
+        <div style="font-size:10px;color:var(--dim);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.08em">Bootstrap Time</div>
+      </div>
+      <div style="background:var(--surf2);border:1px solid var(--edge);border-radius:12px;padding:16px;text-align:center">
+        <div style="font-size:36px;font-weight:900;color:#a78bfa;line-height:1">2</div>
+        <div style="font-size:10px;color:var(--dim);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.08em">KB Domains</div>
+      </div>
+    </div>
+
+    <!-- Principles + Stacks row -->
+    <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:14px;flex:1">
+
+      <div style="background:var(--surf2);border:1px solid var(--edge);border-radius:14px;padding:18px 20px">
+        <div style="font-size:11px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px">Core Architectural Principles</div>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <div style="display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:center">
+            <span style="font-size:14px">🧠</span><span style="font-size:12px;color:var(--muted);line-height:1.4"><strong style="color:var(--text)">Bifurcated Truth</strong> — Product and Engineering domains separated by design; no cross-contamination of concerns.</span>
+          </div>
+          <div style="height:1px;background:var(--edge)"></div>
+          <div style="display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:center">
+            <span style="font-size:14px">🏷️</span><span style="font-size:12px;color:var(--muted);line-height:1.4"><strong style="color:var(--text)">Release-Gated Cadence</strong> — Docs tied to version boundaries, not individual PRs. Zero noise, guaranteed accuracy per release.</span>
+          </div>
+          <div style="height:1px;background:var(--edge)"></div>
+          <div style="display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:center">
+            <span style="font-size:14px">🔒</span><span style="font-size:12px;color:var(--muted);line-height:1.4"><strong style="color:var(--text)">Mechanically Enforced</strong> — Self-updating instructions, automated GitHub Actions, and Git hooks remove human discipline as a single point of failure.</span>
+          </div>
+          <div style="height:1px;background:var(--edge)"></div>
+          <div style="display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:center">
+            <span style="font-size:14px">📡</span><span style="font-size:12px;color:var(--muted);line-height:1.4"><strong style="color:var(--text)">Topological Propagation</strong> — Kahn's DAG algorithm ensures low-level contract changes cascade correctly to all dependent high-level components.</span>
+          </div>
+          <div style="height:1px;background:var(--edge)"></div>
+          <div style="display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:center">
+            <span style="font-size:14px">🔧</span><span style="font-size:12px;color:var(--muted);line-height:1.4"><strong style="color:var(--text)">Prevention over Detection</strong> — Shift-left strategy: pre-commit hooks, RepoAgent, and contract testing prevent drift before code is merged.</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="background:var(--surf2);border:1px solid var(--edge);border-radius:14px;padding:18px 20px;flex:1">
+          <div style="font-size:11px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px">Supported Stacks</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:center;gap:10px;background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.2);border-radius:10px;padding:10px 12px">
+              <span style="font-size:18px">⚛️</span>
+              <div><div style="font-size:12px;font-weight:600">React + Redux Toolkit</div><div style="font-size:10px;color:var(--dim)">MFE / Micro-frontend</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:10px 12px">
+              <span style="font-size:18px">☕</span>
+              <div><div style="font-size:12px;font-weight:600">Java Spring Boot</div><div style="font-size:10px;color:var(--dim)">Backend microservice</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.2);border-radius:10px;padding:10px 12px">
+              <span style="font-size:18px">🔗</span>
+              <div><div style="font-size:12px;font-weight:600">Apigee Edge / X</div><div style="font-size:10px;color:var(--dim)">API Gateway proxy</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;background:rgba(100,116,139,.06);border:1px solid rgba(100,116,139,.2);border-radius:10px;padding:10px 12px">
+              <span style="font-size:18px">🌐</span>
+              <div><div style="font-size:12px;font-weight:600">Generic Fallback</div><div style="font-size:10px;color:var(--dim)">Python, Go, Node, etc.</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /deck -->
+
+<!-- ── NAV ─────────────────────────────────────── -->
+<nav class="nav-bar">
+  <button class="nav-btn" id="prev-btn" onclick="go(-1)" disabled>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15,18 9,12 15,6"/></svg>
+  </button>
+  <div class="nav-dots" id="nav-dots"></div>
+  <div class="nav-label" id="nav-label">1 / 7</div>
+  <button class="nav-btn" id="next-btn" onclick="go(1)">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9,18 15,12 9,6"/></svg>
+  </button>
+</nav>
+
+<script>
+const SLIDES = document.querySelectorAll('.slide');
+const N = SLIDES.length;
+let cur = 0;
+
+// Build dots
+const dotsEl = document.getElementById('nav-dots');
+for (let i = 0; i < N; i++) {
+  const d = document.createElement('div');
+  d.className = 'ndot' + (i === 0 ? ' on' : '');
+  d.style.width = i === 0 ? '18px' : '5px';
+  d.onclick = () => jump(i);
+  dotsEl.appendChild(d);
+}
+
+function jump(idx) {
+  SLIDES[cur].classList.remove('active');
+  SLIDES[cur].classList.add('out');
+  const prev = cur;
+  cur = idx;
+  setTimeout(() => SLIDES[prev].classList.remove('out'), 500);
+  SLIDES[cur].classList.add('active');
+
+  const allDots = dotsEl.querySelectorAll('.ndot');
+  allDots.forEach((d, i) => {
+    d.classList.toggle('on', i === cur);
+    d.style.width = i === cur ? '18px' : '5px';
+  });
+
+  document.getElementById('nav-label').textContent = (cur+1) + ' / ' + N;
+  document.getElementById('prev-btn').disabled = cur === 0;
+  document.getElementById('next-btn').disabled = cur === N-1;
+}
+
+function go(dir) {
+  const n = cur + dir;
+  if (n >= 0 && n < N) jump(n);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(1);
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   go(-1);
+});
+</script>
+</body>
+</html>
