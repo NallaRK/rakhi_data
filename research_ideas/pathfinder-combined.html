@@ -1,0 +1,3627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pathfinder — AI-Guided Development Platform</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css" id="theme">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+/* ========================================================== */
+/* MAIN DECK STYLES                                            */
+/* ========================================================== */
+
+/* ================ BRAND TOKENS ================ */
+:root {
+  --primary-red:    #B31E2A;
+  --primary-red-dk: #8A1620;
+  --accent-gold:    #F2A900;
+  --accent-gold-dk: #C58800;
+  --deep-navy:      #0F1B2D;
+  --navy-soft:      #1A2942;
+  --cream:          #FAF6F0;
+  --cream-warm:     #F2EDE3;
+  --charcoal:       #1A1A1A;
+  --muted-gray:     #6B6B6B;
+  --soft-gray:      #E8E4DE;
+  --hairline:       #D8D2C7;
+  --teal:           #1F6F6F;
+  --teal-light:     #2D9B9B;
+
+  --ff-display: 'Fraunces', Georgia, serif;
+  --ff-body:    'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --ff-mono:    'JetBrains Mono', 'SF Mono', monospace;
+}
+
+/* ================ GLOBAL RESETS ================ */
+.reveal {
+  font-family: var(--ff-body);
+  font-size: 28px;
+  color: var(--charcoal);
+  font-weight: 400;
+  letter-spacing: -0.005em;
+}
+
+.reveal .slides section {
+  text-align: left;
+  padding: 0 !important;
+  height: 100%;
+  width: 100%;
+}
+
+.reveal h1, .reveal h2, .reveal h3, .reveal h4 {
+  font-family: var(--ff-display);
+  font-weight: 500;
+  color: var(--charcoal);
+  text-transform: none;
+  letter-spacing: -0.02em;
+  margin: 0;
+  line-height: 1.05;
+}
+
+.reveal h1 { font-size: 5.2rem; font-weight: 600; }
+.reveal h2 { font-size: 3.4rem; font-weight: 500; }
+.reveal h3 { font-size: 1.9rem; font-weight: 500; }
+.reveal h4 { font-size: 1.3rem; font-weight: 500; }
+
+.reveal p, .reveal li { line-height: 1.5; }
+.reveal a { color: var(--primary-red); }
+.reveal strong { font-weight: 600; color: var(--charcoal); }
+
+/* ================ SLIDE CHROME ================ */
+.slide-frame {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 70px 90px 60px;
+  box-sizing: border-box;
+  background: var(--cream);
+}
+.slide-frame.dark {
+  background: var(--deep-navy);
+  color: var(--cream);
+}
+.slide-frame.dark h1,
+.slide-frame.dark h2,
+.slide-frame.dark h3,
+.slide-frame.dark h4 { color: var(--cream); }
+.slide-frame.dark strong { color: var(--accent-gold); }
+
+/* Eyebrow / slide marker */
+.eyebrow {
+  position: absolute;
+  top: 36px;
+  left: 90px;
+  right: 90px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--ff-body);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted-gray);
+}
+.dark .eyebrow { color: rgba(250, 246, 240, 0.55); }
+.eyebrow .mark { color: var(--primary-red); font-weight: 600; }
+.dark .eyebrow .mark { color: var(--accent-gold); }
+
+/* Compass / signature mark */
+.compass {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 10px;
+}
+
+/* Bottom accent bar */
+.accent-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 6px;
+  background: var(--primary-red);
+}
+.accent-bar.phase-1 { width: 33%; background: var(--teal); }
+.accent-bar.phase-2 { width: 66%; background: var(--primary-red); }
+.accent-bar.phase-3 { width: 100%; background: var(--accent-gold); }
+.accent-bar.full    { width: 100%; }
+
+/* Hairline divider in gold */
+.hairline {
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent-gold) 0%, var(--accent-gold) 80px, transparent 80px);
+  width: 100%;
+  margin: 28px 0;
+}
+
+/* ================ TITLE SLIDE ================ */
+.title-slide {
+  background: var(--deep-navy);
+  color: var(--cream);
+  padding: 0 !important;
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 0;
+}
+.title-slide .left {
+  padding: 90px 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.title-slide .right {
+  background: var(--primary-red);
+  position: relative;
+  overflow: hidden;
+}
+.title-slide .right::before {
+  content: '';
+  position: absolute;
+  top: -200px; right: -200px;
+  width: 600px; height: 600px;
+  border: 1px solid rgba(242, 169, 0, 0.3);
+  border-radius: 50%;
+}
+.title-slide .right::after {
+  content: '';
+  position: absolute;
+  top: -100px; right: -100px;
+  width: 400px; height: 400px;
+  border: 1px solid rgba(242, 169, 0, 0.5);
+  border-radius: 50%;
+}
+.title-slide .right .compass-large {
+  position: absolute;
+  bottom: 80px;
+  right: 80px;
+  width: 180px;
+  height: 180px;
+  opacity: 0.95;
+}
+
+.title-eyebrow {
+  font-family: var(--ff-body);
+  font-size: 0.85rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--accent-gold);
+  font-weight: 500;
+  margin-bottom: 28px;
+}
+.title-slide h1 {
+  font-family: var(--ff-display);
+  font-size: 7rem;
+  font-weight: 600;
+  color: var(--cream);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+}
+.title-slide .subtitle {
+  font-family: var(--ff-display);
+  font-size: 2.4rem;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--cream);
+  opacity: 0.85;
+  margin-top: 20px;
+  line-height: 1.2;
+}
+.title-slide .footnote {
+  font-family: var(--ff-body);
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  color: rgba(250, 246, 240, 0.55);
+  text-transform: uppercase;
+}
+
+/* ================ SECTION DIVIDER SLIDES ================ */
+.section-slide {
+  background: var(--deep-navy);
+  color: var(--cream);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 70px 120px;
+}
+.section-slide .act-number {
+  font-family: var(--ff-display);
+  font-size: 12rem;
+  font-weight: 300;
+  line-height: 1;
+  color: var(--accent-gold);
+  opacity: 0.9;
+  margin-bottom: 30px;
+}
+.section-slide h2 {
+  color: var(--cream);
+  font-size: 4.2rem;
+  font-weight: 500;
+}
+.section-slide .section-tag {
+  font-size: 0.85rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--accent-gold);
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+.section-slide .section-blurb {
+  font-family: var(--ff-display);
+  font-size: 1.6rem;
+  font-style: italic;
+  color: rgba(250, 246, 240, 0.75);
+  margin-top: 24px;
+  max-width: 800px;
+  line-height: 1.4;
+}
+
+/* ================ HEADER STYLES FOR CONTENT SLIDES ================ */
+.slide-frame h2.slide-title {
+  font-family: var(--ff-display);
+  font-size: 3rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+  margin-top: 30px;
+}
+.slide-frame .slide-kicker {
+  font-family: var(--ff-body);
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--primary-red);
+  font-weight: 600;
+  margin-top: 12px;
+}
+.slide-frame.dark .slide-kicker { color: var(--accent-gold); }
+
+.slide-frame .slide-lede {
+  font-family: var(--ff-display);
+  font-size: 1.25rem;
+  font-style: italic;
+  color: var(--muted-gray);
+  margin: 8px 0 24px;
+  max-width: 900px;
+  line-height: 1.4;
+}
+.dark .slide-lede { color: rgba(250, 246, 240, 0.65); }
+
+/* ================ PAIN POINTS GRID ================ */
+.pain-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 30px;
+}
+.pain-item {
+  background: white;
+  border-left: 3px solid var(--primary-red);
+  padding: 22px 26px;
+  display: flex;
+  gap: 18px;
+}
+.pain-num {
+  font-family: var(--ff-display);
+  font-size: 2.4rem;
+  font-weight: 400;
+  color: var(--primary-red);
+  line-height: 1;
+  min-width: 40px;
+}
+.pain-text { flex: 1; }
+.pain-text h4 {
+  font-family: var(--ff-body);
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--charcoal);
+}
+.pain-text p {
+  font-size: 0.85rem;
+  color: var(--muted-gray);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ================ VISION GRID ================ */
+.vision-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 30px;
+}
+.vision-card {
+  background: white;
+  padding: 32px 28px;
+  position: relative;
+  border-top: 4px solid var(--primary-red);
+}
+.vision-card.gold { border-top-color: var(--accent-gold); }
+.vision-card.teal { border-top-color: var(--teal); }
+.vision-card .v-icon {
+  width: 48px; height: 48px;
+  margin-bottom: 18px;
+}
+.vision-card h4 {
+  font-family: var(--ff-display);
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.vision-card p {
+  font-size: 0.9rem;
+  color: var(--muted-gray);
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ================ THREE-PHASE TIMELINE ================ */
+.timeline {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+  margin-top: 50px;
+  position: relative;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  top: 32px;
+  left: 0; right: 0;
+  height: 2px;
+  background: var(--hairline);
+}
+.phase-col {
+  padding: 0 24px;
+  position: relative;
+}
+.phase-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid var(--teal);
+  margin: 22px auto 30px;
+  position: relative;
+  z-index: 2;
+}
+.phase-col:nth-child(2) .phase-dot { border-color: var(--primary-red); }
+.phase-col:nth-child(3) .phase-dot { border-color: var(--accent-gold); }
+.phase-num {
+  font-family: var(--ff-display);
+  font-size: 0.95rem;
+  letter-spacing: 0.18em;
+  font-weight: 500;
+  text-align: center;
+  color: var(--muted-gray);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+.phase-name {
+  font-family: var(--ff-display);
+  font-size: 1.9rem;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 4px;
+  color: var(--teal);
+}
+.phase-col:nth-child(2) .phase-name { color: var(--primary-red); }
+.phase-col:nth-child(3) .phase-name { color: var(--accent-gold-dk); }
+.phase-duration {
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--muted-gray);
+  margin-bottom: 24px;
+}
+.phase-desc {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--charcoal);
+  margin-bottom: 20px;
+}
+.phase-meta {
+  font-size: 0.78rem;
+  color: var(--muted-gray);
+  border-top: 1px solid var(--hairline);
+  padding-top: 16px;
+  line-height: 1.5;
+}
+.phase-meta strong {
+  display: block;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--charcoal);
+  margin-bottom: 4px;
+}
+
+/* ================ BEFORE/AFTER ================ */
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 50px 1fr;
+  gap: 0;
+  align-items: stretch;
+  margin-top: 24px;
+}
+.compare-col {
+  padding: 30px 32px;
+  background: white;
+}
+.compare-col.before {
+  background: var(--cream-warm);
+  border-right: none;
+}
+.compare-col.after {
+  background: white;
+  border-left: 3px solid var(--primary-red);
+}
+.compare-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: var(--primary-red);
+}
+.compare-col h4 {
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted-gray);
+  font-family: var(--ff-body);
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+.compare-col.after h4 { color: var(--primary-red); }
+.compare-row {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 14px;
+  align-items: flex-start;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+.compare-bullet {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted-gray);
+  margin-top: 8px;
+}
+.compare-col.after .compare-bullet { background: var(--primary-red); }
+
+/* ================ ARCHITECTURE DIAGRAMS ================ */
+.arch-diagram {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  padding: 10px 0;
+}
+.arch-diagram svg {
+  max-width: 100%;
+  max-height: 100%;
+  height: auto;
+}
+
+/* ================ FILE INVENTORY ================ */
+.file-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin-top: 24px;
+}
+.file-col h3 {
+  font-family: var(--ff-display);
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--primary-red);
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--accent-gold);
+}
+.file-col.hub h3 { color: var(--accent-gold-dk); }
+.file-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--hairline);
+  font-size: 0.85rem;
+}
+.file-row:last-child { border-bottom: none; }
+.file-path {
+  font-family: var(--ff-mono);
+  font-size: 0.78rem;
+  color: var(--charcoal);
+  background: var(--cream-warm);
+  padding: 3px 8px;
+  border-radius: 2px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.file-purpose {
+  color: var(--muted-gray);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+/* ================ TECH RATIONALE ================ */
+.tech-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-top: 20px;
+}
+.tech-card {
+  background: white;
+  padding: 24px 26px;
+  border-left: 4px solid var(--primary-red);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+.tech-card.gold { border-left-color: var(--accent-gold); }
+.tech-card.teal { border-left-color: var(--teal); }
+.tech-card .tech-name {
+  font-family: var(--ff-display);
+  font-size: 1.4rem;
+  font-weight: 500;
+}
+.tech-card .tech-license {
+  display: inline-block;
+  font-family: var(--ff-mono);
+  font-size: 0.7rem;
+  color: var(--primary-red);
+  background: rgba(179, 30, 42, 0.08);
+  padding: 2px 8px;
+  border-radius: 2px;
+  width: fit-content;
+  margin-bottom: 4px;
+}
+.tech-card.gold .tech-license { color: var(--accent-gold-dk); background: rgba(242, 169, 0, 0.12); }
+.tech-card.teal .tech-license { color: var(--teal); background: rgba(31, 111, 111, 0.1); }
+.tech-card p {
+  font-size: 0.82rem;
+  color: var(--muted-gray);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ================ WORKFLOW STEPS ================ */
+.workflow-diagram {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 20px 0;
+}
+.workflow-steps {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+.workflow-step {
+  background: white;
+  padding: 18px 16px;
+  position: relative;
+  font-size: 0.8rem;
+  border-top: 3px solid var(--soft-gray);
+}
+.workflow-step.active { border-top-color: var(--primary-red); }
+.workflow-step .step-num {
+  font-family: var(--ff-display);
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--primary-red);
+  margin-bottom: 6px;
+}
+.workflow-step h5 {
+  font-family: var(--ff-body);
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+  color: var(--charcoal);
+}
+.workflow-step p {
+  font-size: 0.72rem;
+  color: var(--muted-gray);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* ================ PROS / CONS ================ */
+.proscons-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin-top: 20px;
+}
+.proscons-col {
+  background: white;
+  padding: 28px 32px;
+  border-top: 3px solid var(--teal);
+}
+.proscons-col.cons { border-top-color: var(--accent-gold); }
+.proscons-col h3 {
+  font-family: var(--ff-display);
+  font-size: 1.6rem;
+  font-weight: 500;
+  margin-bottom: 16px;
+  color: var(--teal);
+}
+.proscons-col.cons h3 { color: var(--accent-gold-dk); }
+.pc-row {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+.pc-mark {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  font-family: var(--ff-display);
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--teal);
+}
+.proscons-col.cons .pc-mark { color: var(--accent-gold-dk); }
+
+/* ================ COST BREAKDOWN ================ */
+.cost-table {
+  display: grid;
+  grid-template-columns: 200px 1fr 1fr 1fr;
+  gap: 0;
+  margin-top: 24px;
+  background: white;
+}
+.cost-cell {
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--hairline);
+  border-right: 1px solid var(--hairline);
+  font-size: 0.88rem;
+}
+.cost-cell:nth-child(4n) { border-right: none; }
+.cost-cell.header {
+  background: var(--deep-navy);
+  color: var(--cream);
+  font-family: var(--ff-body);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.cost-cell.phase-label {
+  background: var(--cream-warm);
+  font-family: var(--ff-display);
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--charcoal);
+  border-right: 3px solid var(--primary-red);
+}
+.cost-cell.phase-label.p2 { border-right-color: var(--accent-gold); }
+.cost-cell.phase-label.p3 { border-right-color: var(--teal); }
+.cost-cell .cost-num {
+  font-family: var(--ff-display);
+  font-size: 1.4rem;
+  font-weight: 500;
+  color: var(--primary-red);
+  display: block;
+}
+.cost-cell .cost-detail {
+  font-size: 0.78rem;
+  color: var(--muted-gray);
+  display: block;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* ================ RISK GRID ================ */
+.risk-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 24px;
+}
+.risk-card {
+  background: white;
+  padding: 20px 22px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 18px;
+  align-items: start;
+}
+.risk-badge {
+  width: 60px;
+  height: 60px;
+  border-radius: 4px;
+  background: var(--cream-warm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--ff-display);
+  flex-shrink: 0;
+}
+.risk-badge .level {
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-gray);
+  font-weight: 500;
+}
+.risk-badge .num {
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1;
+}
+.risk-badge.high { background: rgba(179, 30, 42, 0.1); }
+.risk-badge.high .num { color: var(--primary-red); }
+.risk-badge.med { background: rgba(242, 169, 0, 0.12); }
+.risk-badge.med .num { color: var(--accent-gold-dk); }
+.risk-content h4 {
+  font-family: var(--ff-body);
+  font-size: 0.92rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.risk-content p {
+  font-size: 0.78rem;
+  color: var(--muted-gray);
+  margin: 0;
+  line-height: 1.45;
+}
+.risk-content .mitigation {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--primary-red);
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+/* ================ DECISION GATES ================ */
+.gates-flow {
+  display: flex;
+  align-items: stretch;
+  margin-top: 30px;
+  gap: 0;
+}
+.gate-phase {
+  flex: 1;
+  background: white;
+  padding: 24px 24px;
+  border-top: 4px solid var(--teal);
+}
+.gate-phase.p2 { border-top-color: var(--primary-red); }
+.gate-phase.p3 { border-top-color: var(--accent-gold); }
+.gate-arrow {
+  width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.gate-arrow .gate-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--deep-navy);
+  color: var(--cream);
+  padding: 10px 14px;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  z-index: 2;
+  text-align: center;
+  line-height: 1.3;
+  width: 80%;
+}
+.gate-phase h4 {
+  font-family: var(--ff-display);
+  font-size: 1.3rem;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+.gate-phase .gate-criteria {
+  font-size: 0.78rem;
+  color: var(--charcoal);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+.gate-phase .gate-criteria strong {
+  display: block;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-gray);
+  margin: 12px 0 4px;
+  font-weight: 600;
+}
+
+/* ================ METRICS ================ */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-top: 28px;
+}
+.metric-card {
+  background: white;
+  padding: 28px 30px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 20px;
+  align-items: center;
+  border-left: 3px solid var(--primary-red);
+}
+.metric-label {
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-gray);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.metric-name {
+  font-family: var(--ff-display);
+  font-size: 1.2rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+.metric-change {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.metric-from {
+  font-family: var(--ff-mono);
+  font-size: 0.85rem;
+  color: var(--muted-gray);
+  text-decoration: line-through;
+}
+.metric-arrow { color: var(--primary-red); font-size: 1rem; }
+.metric-to {
+  font-family: var(--ff-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--primary-red);
+}
+
+/* ================ CLOSING SLIDE ================ */
+.closing-slide {
+  background: var(--deep-navy);
+  color: var(--cream);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 80px;
+  position: relative;
+  overflow: hidden;
+}
+.closing-slide::before {
+  content: '';
+  position: absolute;
+  width: 800px; height: 800px;
+  border-radius: 50%;
+  border: 1px solid rgba(242, 169, 0, 0.15);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+}
+.closing-slide::after {
+  content: '';
+  position: absolute;
+  width: 500px; height: 500px;
+  border-radius: 50%;
+  border: 1px solid rgba(242, 169, 0, 0.25);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+}
+.closing-eyebrow {
+  font-size: 0.85rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--accent-gold);
+  font-weight: 500;
+  margin-bottom: 28px;
+  z-index: 2;
+}
+.closing-slide h1 {
+  font-family: var(--ff-display);
+  font-size: 5.5rem;
+  font-weight: 500;
+  color: var(--cream);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  z-index: 2;
+  max-width: 1000px;
+}
+.closing-slide .closing-sub {
+  font-family: var(--ff-display);
+  font-size: 1.4rem;
+  font-style: italic;
+  color: rgba(250, 246, 240, 0.7);
+  margin-top: 30px;
+  z-index: 2;
+  max-width: 700px;
+}
+
+/* ================ ANIMATIONS ================ */
+.reveal .fragment.fade-up {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.5s ease;
+}
+.reveal .fragment.fade-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal .fragment.fade-right {
+  opacity: 0;
+  transform: translateX(-30px);
+  transition: all 0.5s ease;
+}
+.reveal .fragment.fade-right.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Diagram node animations */
+.diagram-node {
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.diagram-node.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+.diagram-edge {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.diagram-edge.visible {
+  opacity: 1;
+}
+
+/* Reveal.js default progress override */
+.reveal .progress {
+  height: 3px;
+  color: var(--primary-red);
+}
+.reveal .controls {
+  color: var(--primary-red);
+}
+.reveal.has-dark-background .controls,
+.reveal section.has-dark-background ~ .controls {
+  color: var(--accent-gold);
+}
+
+
+
+/* ========================================================== */
+/* DETAIL DECK STYLES (caption-strip, pulse animations, etc.)  */
+/* ========================================================== */
+
+:root {
+  --primary-red:    #B31E2A;
+  --primary-red-dk: #8A1620;
+  --accent-gold:    #F2A900;
+  --accent-gold-dk: #C58800;
+  --deep-navy:      #0F1B2D;
+  --navy-soft:      #1A2942;
+  --cream:          #FAF6F0;
+  --cream-warm:     #F2EDE3;
+  --charcoal:       #1A1A1A;
+  --muted-gray:     #6B6B6B;
+  --soft-gray:      #E8E4DE;
+  --hairline:       #D8D2C7;
+  --teal:           #1F6F6F;
+  --teal-light:     #2D9B9B;
+
+  --ff-display: 'Fraunces', Georgia, serif;
+  --ff-body:    'Inter', -apple-system, sans-serif;
+  --ff-mono:    'JetBrains Mono', monospace;
+}
+
+.reveal {
+  font-family: var(--ff-body);
+  font-size: 22px;
+  color: var(--charcoal);
+}
+
+.reveal .slides section {
+  text-align: left;
+  padding: 0 !important;
+  height: 100%;
+  width: 100%;
+}
+
+.reveal h1, .reveal h2, .reveal h3, .reveal h4 {
+  font-family: var(--ff-display);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  margin: 0;
+  line-height: 1.05;
+}
+
+/* ===== SLIDE FRAME ===== */
+.detail-slide {
+  position: absolute;
+  inset: 0;
+  background: var(--cream);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== TOP CAPTION STRIP ===== */
+.caption-strip {
+  background: var(--deep-navy);
+  color: var(--cream);
+  padding: 14px 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  border-bottom: 3px solid var(--accent-gold);
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.caption-strip .phase-mark {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.caption-strip .phase-num {
+  font-family: var(--ff-display);
+  font-size: 2.2rem;
+  font-weight: 500;
+  color: var(--accent-gold);
+  line-height: 1;
+}
+
+.caption-strip .phase-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.caption-strip .phase-tag {
+  font-size: 0.65rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(250, 246, 240, 0.6);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.caption-strip .phase-name {
+  font-family: var(--ff-display);
+  font-size: 1.4rem;
+  font-weight: 500;
+  color: var(--cream);
+  line-height: 1.1;
+}
+
+.caption-strip .phase-desc {
+  flex: 1;
+  text-align: center;
+  font-size: 0.85rem;
+  color: rgba(250, 246, 240, 0.8);
+  font-style: italic;
+  font-family: var(--ff-display);
+  max-width: 760px;
+}
+
+.caption-strip .phase-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.caption-strip .meta-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(250, 246, 240, 0.6);
+  font-weight: 600;
+}
+
+.caption-strip .meta-value {
+  font-family: var(--ff-mono);
+  font-size: 0.85rem;
+  color: var(--accent-gold);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* ===== DIAGRAM CONTAINER (edge to edge) ===== */
+.diagram-canvas {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--cream);
+}
+
+.diagram-canvas svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ===== PULSE ANIMATION ===== */
+@keyframes pulseFlow {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+
+.pulse-dot {
+  fill: var(--primary-red);
+  filter: drop-shadow(0 0 4px var(--primary-red));
+}
+
+.pulse-dot.gold { fill: var(--accent-gold); filter: drop-shadow(0 0 4px var(--accent-gold)); }
+.pulse-dot.teal { fill: var(--teal-light); filter: drop-shadow(0 0 4px var(--teal-light)); }
+.pulse-dot.navy { fill: var(--deep-navy); filter: drop-shadow(0 0 4px var(--deep-navy)); }
+
+/* Flow path animation using stroke-dasharray */
+.flow-line {
+  stroke: var(--muted-gray);
+  stroke-width: 1.5;
+  fill: none;
+  stroke-dasharray: 6 4;
+  stroke-dashoffset: 0;
+  animation: dashFlow 1.2s linear infinite;
+}
+
+.flow-line.red { stroke: var(--primary-red); }
+.flow-line.gold { stroke: var(--accent-gold); }
+.flow-line.teal { stroke: var(--teal); }
+.flow-line.thick { stroke-width: 2.5; }
+
+@keyframes dashFlow {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -20; }
+}
+
+/* Reverse direction */
+.flow-line.reverse {
+  animation: dashFlowReverse 1.2s linear infinite;
+}
+@keyframes dashFlowReverse {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 20; }
+}
+
+/* Static lines (no flow) */
+.static-line {
+  stroke: var(--hairline);
+  stroke-width: 1;
+  fill: none;
+}
+
+.static-line.dashed {
+  stroke-dasharray: 3 3;
+}
+
+/* Reveal.js progress override */
+.reveal .progress {
+  height: 3px;
+  color: var(--primary-red);
+}
+.reveal .controls {
+  color: var(--primary-red);
+}
+
+/* Bottom legend strip */
+.legend-strip {
+  background: white;
+  border-top: 1px solid var(--hairline);
+  padding: 8px 36px;
+  display: flex;
+  gap: 32px;
+  align-items: center;
+  font-size: 0.7rem;
+  color: var(--muted-gray);
+  flex-shrink: 0;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+}
+
+.legend-line {
+  width: 32px;
+  height: 0;
+  border-top: 2px dashed var(--muted-gray);
+}
+
+.legend-line.red { border-top-color: var(--primary-red); }
+.legend-line.gold { border-top-color: var(--accent-gold); }
+.legend-line.teal { border-top-color: var(--teal); }
+
+
+
+/* ========================================================== */
+/* COMBINED-DECK ADDITIONS                                     */
+/* ========================================================== */
+
+/* ========== AUTO-REVEAL ANIMATION SYSTEM ========== */
+.auto-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.65s ease-out, transform 0.65s ease-out;
+  will-change: opacity, transform;
+}
+.reveal .slides section.present .auto-reveal {
+  opacity: 1;
+  transform: translateY(0);
+}
+.auto-reveal[data-delay="1"]  { transition-delay: 0.25s; }
+.auto-reveal[data-delay="2"]  { transition-delay: 0.50s; }
+.auto-reveal[data-delay="3"]  { transition-delay: 0.75s; }
+.auto-reveal[data-delay="4"]  { transition-delay: 1.00s; }
+.auto-reveal[data-delay="5"]  { transition-delay: 1.25s; }
+.auto-reveal[data-delay="6"]  { transition-delay: 1.50s; }
+.auto-reveal[data-delay="7"]  { transition-delay: 1.75s; }
+.auto-reveal[data-delay="8"]  { transition-delay: 2.00s; }
+.auto-reveal[data-delay="9"]  { transition-delay: 2.25s; }
+.auto-reveal[data-delay="10"] { transition-delay: 2.50s; }
+
+/* Sidebar items get a slower cascade */
+.qf-item.auto-reveal[data-delay="1"] { transition-delay: 0.8s; }
+.qf-item.auto-reveal[data-delay="2"] { transition-delay: 1.1s; }
+.qf-item.auto-reveal[data-delay="3"] { transition-delay: 1.4s; }
+.qf-item.auto-reveal[data-delay="4"] { transition-delay: 1.7s; }
+
+/* Force visibility for detail-slide elements that were originally fragments */
+.diagram-node.force-visible,
+.diagram-edge.force-visible {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* ========== QUICK-FACTS SIDEBAR (grid layout when present) ========== */
+.slide-frame.has-sidebar {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+}
+.slide-main {
+  padding: 50px 50px 50px 60px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+  position: relative;
+}
+.slide-frame.has-sidebar .accent-bar {
+  /* keep the accent bar at the bottom of the main area */
+  bottom: 0; left: 0;
+}
+
+.quick-facts {
+  background: var(--deep-navy);
+  color: var(--cream);
+  padding: 50px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  position: relative;
+  overflow: hidden;
+}
+.quick-facts::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 4px; height: 100%;
+  background: var(--accent-gold);
+}
+.qf-label {
+  font-family: var(--ff-body);
+  font-size: 0.62rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--accent-gold);
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.qf-item {
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(250, 246, 240, 0.12);
+}
+.qf-item:last-child { border-bottom: none; padding-bottom: 0; }
+.qf-num {
+  font-family: var(--ff-display);
+  font-size: 1.85rem;
+  font-weight: 500;
+  color: var(--cream);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.qf-num.gold { color: var(--accent-gold); }
+.qf-key {
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(250, 246, 240, 0.55);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.qf-detail {
+  font-size: 0.72rem;
+  color: rgba(250, 246, 240, 0.78);
+  line-height: 1.4;
+}
+
+/* Print fallback: show everything */
+@media print {
+  .auto-reveal { opacity: 1 !important; transform: none !important; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="reveal">
+<div class="slides">
+
+<!-- ============ SLIDE 1 ============ -->
+<section data-background-color="#0F1B2D">
+  <div class="title-slide">
+    <div class="left">
+      <div>
+        <div class="title-eyebrow auto-reveal" data-delay="1">An AI-Guided Development Platform</div>
+        <h1 class="auto-reveal" data-delay="1">Pathfinder</h1>
+        <div class="subtitle auto-reveal" data-delay="2">From vague stories<br>to working code.</div>
+      </div>
+      <div class="footnote auto-reveal" data-delay="5">
+        <div>Implementation Plan / Three-Phase Roadmap</div>
+        <div style="margin-top:8px;">For 35 Polyrepos · 100+ Developers</div>
+      </div>
+    </div>
+    <div class="right">
+      <svg class="compass-large" viewBox="0 0 100 100" fill="none">
+        <circle cx="50" cy="50" r="48" stroke="#F2A900" stroke-width="0.6" opacity="0.6"/>
+        <circle cx="50" cy="50" r="38" stroke="#F2A900" stroke-width="0.6" opacity="0.4"/>
+        <circle cx="50" cy="50" r="28" stroke="#F2A900" stroke-width="0.4" opacity="0.3"/>
+        <path d="M50 8 L54 50 L50 92 L46 50 Z" fill="#F2A900"/>
+        <path d="M8 50 L50 46 L92 50 L50 54 Z" fill="#FAF6F0" opacity="0.9"/>
+        <circle cx="50" cy="50" r="3" fill="#FAF6F0"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 2 ============ -->
+<section data-background-color="#FAF6F0">
+  <div class="slide-frame has-sidebar"><div class="slide-main">
+    <div class="eyebrow"><span class="mark">PATHFINDER</span><span>02 / 16 · The Problem</span></div>
+    <div class="slide-kicker">Why we need this</div>
+    <h2 class="slide-title">Five compounding pain points</h2>
+    <p class="slide-lede">35 repositories. 100+ developers. Stories written in business language. Each one a routing puzzle that costs hours before any code is written.</p>
+
+    <div class="pain-grid">
+      <div class="pain-item auto-reveal" data-delay="1">
+        <div class="pain-num">01</div>
+        <div class="pain-text">
+          <h4>Vague stories</h4>
+          <p>POs write business stories without technical context. Developers reverse-engineer the implementation surface area during grooming.</p>
+        </div>
+      </div>
+      <div class="pain-item auto-reveal" data-delay="2">
+        <div class="pain-num">02</div>
+        <div class="pain-text">
+          <h4>Repo routing overhead</h4>
+          <p>With 35 repos and no systematic method, developers spend hours deciding which repos require changes for a given story.</p>
+        </div>
+      </div>
+      <div class="pain-item auto-reveal" data-delay="3">
+        <div class="pain-num">03</div>
+        <div class="pain-text">
+          <h4>Ad-hoc Copilot prompting</h4>
+          <p>Each developer crafts their own prompts from memory. Quality varies by individual. No standardized workflow exists.</p>
+        </div>
+      </div>
+      <div class="pain-item auto-reveal" data-delay="4">
+        <div class="pain-num">04</div>
+        <div class="pain-text">
+          <h4>Cross-repo blind spots</h4>
+          <p>Shared component and API changes affect many MFEs. Impact analysis is manual, error-prone, and often discovered in QA.</p>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:20px;" class="auto-reveal" data-delay="5">
+      <div class="pain-item" style="border-left-color: var(--accent-gold);">
+        <div class="pain-num" style="color: var(--accent-gold-dk);">05</div>
+        <div class="pain-text">
+          <h4>Inconsistent code generation</h4>
+          <p>Without codified conventions, Copilot generates code that misses team standards, requiring rework during review.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accent-bar full" style="background: var(--primary-red);"></div>
+  </div><div class="quick-facts">
+      <div class="qf-label auto-reveal" data-delay="1">By the numbers</div>
+      <div class="qf-item auto-reveal" data-delay="1">
+        <div class="qf-key">Repositories</div>
+        <div class="qf-num gold">35</div>
+        <div class="qf-detail">30 React MFE + 5 Spring Boot</div>
+      </div><div class="qf-item auto-reveal" data-delay="2">
+        <div class="qf-key">Developers daily</div>
+        <div class="qf-num">100+</div>
+        <div class="qf-detail">Multiple teams, time-zone-spread</div>
+      </div><div class="qf-item auto-reveal" data-delay="3">
+        <div class="qf-key">Hours per story</div>
+        <div class="qf-num gold">2–4</div>
+        <div class="qf-detail">Analysis time today, before any code</div>
+      </div><div class="qf-item auto-reveal" data-delay="4">
+        <div class="qf-key">Manual prompts</div>
+        <div class="qf-num">10–15</div>
+        <div class="qf-detail">Per story, varies per developer</div>
+      </div>
+    </div></div></section>
+
+<!-- ============ SLIDE 3 ============ -->
+<section data-background-color="#FAF6F0">
+  <div class="slide-frame has-sidebar"><div class="slide-main">
+    <div class="eyebrow"><span class="mark">PATHFINDER</span><span>03 / 16 · The Vision</span></div>
+    <div class="slide-kicker">What Pathfinder enables</div>
+    <h2 class="slide-title">One ticket. One workflow. The whole codebase, understood.</h2>
+    <p class="slide-lede">A standardized, AI-guided pipeline that takes a JIRA ticket and produces a reviewed implementation across our 35-repo polyrepo. Designed for developers and product owners alike.</p>
+
+    <div class="vision-grid">
+      <div class="vision-card teal auto-reveal" data-delay="1">
+        <svg class="v-icon" viewBox="0 0 48 48" fill="none">
+          <rect x="6" y="10" width="36" height="28" rx="2" stroke="#1F6F6F" stroke-width="1.5"/>
+          <line x1="6" y1="18" x2="42" y2="18" stroke="#1F6F6F" stroke-width="1.5"/>
+          <circle cx="11" cy="14" r="1.2" fill="#1F6F6F"/>
+          <circle cx="15" cy="14" r="1.2" fill="#1F6F6F"/>
+          <line x1="12" y1="24" x2="24" y2="24" stroke="#1F6F6F" stroke-width="1.5"/>
+          <line x1="12" y1="30" x2="36" y2="30" stroke="#1F6F6F" stroke-width="1.5"/>
+        </svg>
+        <h4>For Product Owners</h4>
+        <p>Write stories in business language. Pathfinder enhances them with affected repos, APIs, and database impacts — directly in JIRA.</p>
+      </div>
+      <div class="vision-card auto-reveal" data-delay="2">
+        <svg class="v-icon" viewBox="0 0 48 48" fill="none">
+          <path d="M8 14 L18 24 L8 34" stroke="#B31E2A" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <line x1="22" y1="34" x2="40" y2="34" stroke="#B31E2A" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <h4>For Developers</h4>
+        <p>Type the ticket ID. Review a guided analysis, plan, and implementation across repos. No more ad-hoc prompting from memory.</p>
+      </div>
+      <div class="vision-card gold auto-reveal" data-delay="3">
+        <svg class="v-icon" viewBox="0 0 48 48" fill="none">
+          <circle cx="24" cy="24" r="16" stroke="#C58800" stroke-width="1.5"/>
+          <circle cx="24" cy="24" r="3" fill="#C58800"/>
+          <line x1="24" y1="8" x2="24" y2="14" stroke="#C58800" stroke-width="2"/>
+          <line x1="24" y1="34" x2="24" y2="40" stroke="#C58800" stroke-width="2"/>
+          <line x1="8" y1="24" x2="14" y2="24" stroke="#C58800" stroke-width="2"/>
+          <line x1="34" y1="24" x2="40" y2="24" stroke="#C58800" stroke-width="2"/>
+        </svg>
+        <h4>For Architects</h4>
+        <p>Real-time cross-repo intelligence. Blast-radius analysis on shared components. Drift detection before it becomes a defect.</p>
+      </div>
+    </div>
+
+    <div class="accent-bar full"></div>
+  </div><div class="quick-facts">
+      <div class="qf-label auto-reveal" data-delay="1">Three roles</div>
+      <div class="qf-item auto-reveal" data-delay="1">
+        <div class="qf-key">Product Owner</div>
+        <div class="qf-num gold">JIRA-native</div>
+        <div class="qf-detail">Stays in their existing tool. Zero new UI.</div>
+      </div><div class="qf-item auto-reveal" data-delay="2">
+        <div class="qf-key">Developer</div>
+        <div class="qf-num">VSCode</div>
+        <div class="qf-detail">Custom agents do routing & drafting.</div>
+      </div><div class="qf-item auto-reveal" data-delay="3">
+        <div class="qf-key">Architect</div>
+        <div class="qf-num gold">Graph</div>
+        <div class="qf-detail">Symbol-level queries, drift alerts.</div>
+      </div><div class="qf-item auto-reveal" data-delay="4">
+        <div class="qf-key">Standard</div>
+        <div class="qf-num">MCP</div>
+        <div class="qf-detail">Model Context Protocol · Linux Foundation</div>
+      </div>
+    </div></div></section>
+
+<!-- ============ SLIDE 4 ============ -->
+<section data-background-color="#FAF6F0">
+  <div class="slide-frame">
+    <div class="eyebrow auto-reveal" data-delay="1"><span class="mark">PATHFINDER</span><span>04 / 16 · The Roadmap</span></div>
+    <div class="slide-kicker auto-reveal" data-delay="1">A staged, reversible journey</div>
+    <h2 class="slide-title auto-reveal" data-delay="2">Three phases. Two decision gates. One direction.</h2>
+    <p class="slide-lede auto-reveal" data-delay="3">Each phase is independently valuable. Each ends with measured outcomes that determine whether the next phase is justified.</p>
+
+    <div class="timeline">
+      <div class="phase-col auto-reveal" data-delay="1">
+        <div class="phase-num">Phase 01</div>
+        <div class="phase-dot"></div>
+        <div class="phase-name">Validate</div>
+        <div class="phase-duration">Weeks 1–2</div>
+        <p class="phase-desc">Zero infrastructure. Copilot custom agents + Devin's existing DeepWiki MCP. Prove the workflow with 3 MVP repos and 5–8 developers.</p>
+        <div class="phase-meta">
+          <strong>Investment</strong>
+          1 developer × 2 weeks. ~$50 in Devin ACUs.
+          <strong style="margin-top:10px;">Outcome</strong>
+          Decision: scale, stay, or stop.
+        </div>
+      </div>
+      <div class="phase-col auto-reveal" data-delay="2">
+        <div class="phase-num">Phase 02</div>
+        <div class="phase-dot"></div>
+        <div class="phase-name">Scale</div>
+        <div class="phase-duration">Weeks 3–6</div>
+        <p class="phase-desc">Self-hosted knowledge hub for all 35 repos. Eliminates ACU costs. Extends Pathfinder to PO story-writing via JIRA automation.</p>
+        <div class="phase-meta">
+          <strong>Investment</strong>
+          1 developer × 4 weeks. $100–160 one-time export.
+          <strong style="margin-top:10px;">Outcome</strong>
+          Durable cross-repo intelligence.
+        </div>
+      </div>
+      <div class="phase-col auto-reveal" data-delay="3">
+        <div class="phase-num">Phase 03</div>
+        <div class="phase-dot"></div>
+        <div class="phase-name">Deepen</div>
+        <div class="phase-duration">Weeks 7–14</div>
+        <p class="phase-desc">Real-time, symbol-level intelligence via SCIP indexers + ArcadeDB graph. CI-triggered reconciliation. Blast-radius and drift detection.</p>
+        <div class="phase-meta">
+          <strong>Investment</strong>
+          1–2 developers × 8 weeks. ~$100–200/mo infrastructure.
+          <strong style="margin-top:10px;">Outcome</strong>
+          Symbol-precision impact analysis.
+        </div>
+      </div>
+    </div>
+
+    <div class="accent-bar full" style="background: linear-gradient(90deg, var(--teal) 0%, var(--teal) 33%, var(--primary-red) 33%, var(--primary-red) 66%, var(--accent-gold) 66%);"></div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 5 ============ -->
+<section data-background-color="#FAF6F0">
+  <div class="slide-frame">
+    <div class="eyebrow auto-reveal" data-delay="1"><span class="mark">PATHFINDER</span><span>05 / 16 · Before & After</span></div>
+    <div class="slide-kicker auto-reveal" data-delay="1">The transformation</div>
+    <h2 class="slide-title auto-reveal" data-delay="2">From manual analysis to guided execution.</h2>
+
+    <div class="compare-grid">
+      <div class="compare-col before auto-reveal" data-delay="3">
+        <h4>Today — Manual & Ad-Hoc</h4>
+        <div class="compare-row"><div class="compare-bullet"></div><div>Developer reads vague JIRA story, guesses affected repos</div></div>
+        <div class="compare-row"><div class="compare-bullet"></div><div>Searches 35 repos manually for related code</div></div>
+        <div class="compare-row"><div class="compare-bullet"></div><div>Crafts 10–15 individual Copilot prompts from memory</div></div>
+        <div class="compare-row"><div class="compare-bullet"></div><div>Generated code misses team patterns — review rework</div></div>
+        <div class="compare-row"><div class="compare-bullet"></div><div>Cross-repo impacts discovered in QA or production</div></div>
+        <div class="compare-row"><div class="compare-bullet"></div><div>Each developer reinvents the workflow per story</div></div>
+        <div style="margin-top:24px; padding-top:18px; border-top:1px solid var(--hairline); font-size:0.78rem; color:var(--muted-gray); text-transform:uppercase; letter-spacing:0.12em; font-weight:600;">Time per story: <span style="font-family:var(--ff-display); font-size:1.6rem; color:var(--charcoal); font-weight:500; text-transform:none; letter-spacing:0;">2–4 hours</span></div>
+      </div>
+      <div class="compare-arrow auto-reveal" data-delay="5">→</div>
+      <div class="compare-col after auto-reveal" data-delay="4">
+        <h4>With Pathfinder — Guided & Standardized</h4>
+        <div class="compare-row"><div class="compare-bullet"></div><div>Developer types JIRA ticket ID into Story Analyzer agent</div></div>
+        <div class="compare-row"><div class="compare-bullet"></div><div>Agent identifies affected repos with file-path citations</div></div>
+        <div class="compare-row"><div class="compare-bullet"></div><div>Implementation Planner produces ordered, file-by-file plan</div></div>
+        <div class="compare-row"><div class="compare-bullet"></div><div>Code follows codified patterns (copilot-instructions.md)</div></div>
+        <div class="compare-row"><div class="compare-bullet"></div><div>Cross-repo impacts surfaced before implementation</div></div>
+        <div class="compare-row"><div class="compare-bullet"></div><div>Code Reviewer agent validates AC coverage</div></div>
+        <div style="margin-top:24px; padding-top:18px; border-top:1px solid var(--hairline); font-size:0.78rem; color:var(--primary-red); text-transform:uppercase; letter-spacing:0.12em; font-weight:600;">Time per story: <span style="font-family:var(--ff-display); font-size:1.6rem; color:var(--primary-red); font-weight:600; text-transform:none; letter-spacing:0;">&lt; 30 min</span></div>
+      </div>
+    </div>
+
+    <div class="accent-bar full"></div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 6 ============ -->
+<section data-background-color="#FAF6F0">
+  <div class="detail-slide">
+    <div class="caption-strip">
+      <div class="phase-mark">
+        <div class="phase-num">01</div>
+        <div class="phase-info">
+          <div class="phase-tag">Phase One · Validate</div>
+          <div class="phase-name">Copilot-Native Workflow</div>
+        </div>
+      </div>
+      <div class="phase-desc">Zero infrastructure. Developer types a ticket ID. Three agents run a guided pipeline using Devin's DeepWiki, JIRA, and local repo context — producing technical analysis, an implementation plan, and reviewed code.</div>
+      <div class="phase-meta">
+        <div class="meta-label">Duration · Cost · Scope</div>
+        <div class="meta-value">2 weeks · ~$50 · 3 repos</div>
+      </div>
+    </div>
+
+    <div class="diagram-canvas">
+      <svg viewBox="0 0 1920 920" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <marker id="arrR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="#B31E2A"/>
+          </marker>
+          <marker id="arrG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="#F2A900"/>
+          </marker>
+          <marker id="arrT" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="#1F6F6F"/>
+          </marker>
+          <marker id="arrM" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="#6B6B6B"/>
+          </marker>
+        </defs>
+
+        <!-- ============ COLUMN HEADERS ============ -->
+        <text x="120" y="40" font-family="Inter" font-size="11" font-weight="700" fill="#6B6B6B" letter-spacing="2.4">01 · INPUT</text>
+        <text x="420" y="40" font-family="Inter" font-size="11" font-weight="700" fill="#6B6B6B" letter-spacing="2.4">02 · ORCHESTRATION</text>
+        <text x="1020" y="40" font-family="Inter" font-size="11" font-weight="700" fill="#6B6B6B" letter-spacing="2.4">03 · CONTEXT SOURCES</text>
+        <text x="1500" y="40" font-family="Inter" font-size="11" font-weight="700" fill="#6B6B6B" letter-spacing="2.4">04 · OUTPUT</text>
+        <line x1="40" y1="55" x2="1880" y2="55" stroke="#D8D2C7" stroke-width="1"/>
+
+        <!-- ============ DEVELOPER (Input) ============ -->
+        <g>
+          <rect x="40" y="320" width="240" height="160" rx="3" fill="white" stroke="#1F6F6F" stroke-width="2"/>
+          <rect x="40" y="320" width="240" height="32" fill="#1F6F6F"/>
+          <text x="56" y="341" font-family="Inter" font-size="12" font-weight="600" fill="#FAF6F0">DEVELOPER</text>
+          <text x="56" y="376" font-family="Inter" font-size="13" font-weight="600" fill="#1A1A1A">VSCode + Copilot Chat</text>
+          <text x="56" y="396" font-family="Inter" font-size="11" fill="#6B6B6B">Selects @story-analyzer</text>
+          <text x="56" y="414" font-family="Inter" font-size="11" fill="#6B6B6B">Types: PROJ-1234</text>
+          <line x1="56" y1="428" x2="264" y2="428" stroke="#D8D2C7"/>
+          <text x="56" y="446" font-family="Inter" font-size="10" font-weight="600" fill="#1F6F6F" letter-spacing="1">SINGLE TYPED INPUT</text>
+          <text x="56" y="463" font-family="Inter" font-size="9" fill="#6B6B6B">All other steps are guided</text>
+        </g>
+
+        <!-- ============ THE THREE AGENTS (Orchestration) ============ -->
+        <!-- Outer container -->
+        <rect x="350" y="80" width="540" height="800" rx="4" fill="none" stroke="#D8D2C7" stroke-width="1" stroke-dasharray="4 4"/>
+        <text x="365" y="105" font-family="Inter" font-size="10" font-weight="700" fill="#6B6B6B" letter-spacing="1.5">PATHFINDER AGENTS · .github/agents/</text>
+
+        <!-- Story Analyzer -->
+        <g>
+          <rect x="370" y="125" width="500" height="180" rx="3" fill="#B31E2A" stroke="#8A1620" stroke-width="2"/>
+          <rect x="370" y="125" width="500" height="36" fill="#8A1620"/>
+          <text x="386" y="148" font-family="Inter" font-size="12" font-weight="600" fill="#FAF6F0">@story-analyzer</text>
+          <text x="700" y="148" font-family="JetBrains Mono" font-size="10" fill="rgba(250,246,240,0.7)">model: Claude Opus 4.6</text>
+
+          <text x="386" y="184" font-family="Inter" font-size="11" font-weight="600" fill="#FAF6F0">Reads JIRA ticket → identifies affected repos</text>
+
+          <text x="386" y="206" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">• Reads ticket via JIRA MCP</text>
+          <text x="386" y="222" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">• Queries DeepWiki for cross-repo context</text>
+          <text x="386" y="238" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">• Reads local architecture-manifest.json</text>
+          <text x="386" y="254" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">• Reads @workspace files for current repo</text>
+          <text x="386" y="270" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">• Outputs: components, APIs, MongoDB collections,</text>
+          <text x="396" y="284" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">file-path citations, AC mapping</text>
+          <text x="386" y="298" font-family="JetBrains Mono" font-size="9" fill="#F2A900">story-analyzer.agent.md</text>
+        </g>
+
+        <!-- Handoff button visual -->
+        <g>
+          <rect x="550" y="315" width="140" height="22" rx="11" fill="#0F1B2D"/>
+          <text x="620" y="330" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" fill="#FAF6F0">↓ Plan Implementation</text>
+        </g>
+
+        <!-- Implementation Planner -->
+        <g>
+          <rect x="370" y="350" width="500" height="180" rx="3" fill="#B31E2A" stroke="#8A1620" stroke-width="2"/>
+          <rect x="370" y="350" width="500" height="36" fill="#8A1620"/>
+          <text x="386" y="373" font-family="Inter" font-size="12" font-weight="600" fill="#FAF6F0">@implementation-planner</text>
+          <text x="700" y="373" font-family="JetBrains Mono" font-size="10" fill="rgba(250,246,240,0.7)">model: GPT-5.2-Codex</text>
+
+          <text x="386" y="409" font-family="Inter" font-size="11" font-weight="600" fill="#FAF6F0">Builds ordered, file-by-file plan with pattern refs</text>
+
+          <text x="386" y="431" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">• Each step = one file change</text>
+          <text x="386" y="447" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">• Cites existing patterns: "follow src/hooks/useKycForm.ts"</text>
+          <text x="386" y="463" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">• Orders steps by dependency (backend before frontend)</text>
+          <text x="386" y="479" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">• Flags cross-repo steps for separate tickets</text>
+          <text x="386" y="495" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">• Includes test steps after each feature step</text>
+          <text x="386" y="511" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">• Verifies cited file paths exist via @workspace</text>
+          <text x="386" y="523" font-family="JetBrains Mono" font-size="9" fill="#F2A900">implementation-planner.agent.md</text>
+        </g>
+
+        <!-- Handoff button 2 -->
+        <g>
+          <rect x="550" y="540" width="140" height="22" rx="11" fill="#0F1B2D"/>
+          <text x="620" y="555" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" fill="#FAF6F0">↓ Start Implementation</text>
+        </g>
+
+        <!-- Copilot Agent Mode (Implementation) -->
+        <g>
+          <rect x="370" y="575" width="500" height="120" rx="3" fill="white" stroke="#B31E2A" stroke-width="2" stroke-dasharray="6 3"/>
+          <rect x="370" y="575" width="500" height="32" fill="white" stroke="#B31E2A" stroke-width="0"/>
+          <text x="386" y="595" font-family="Inter" font-size="12" font-weight="600" fill="#B31E2A">Copilot Agent Mode (built-in)</text>
+          <text x="700" y="595" font-family="JetBrains Mono" font-size="10" fill="#6B6B6B">VSCode native</text>
+
+          <text x="386" y="624" font-family="Inter" font-size="10" fill="#1A1A1A">• Executes plan step-by-step</text>
+          <text x="386" y="640" font-family="Inter" font-size="10" fill="#1A1A1A">• Reviews each file change with developer (keep / undo)</text>
+          <text x="386" y="656" font-family="Inter" font-size="10" fill="#1A1A1A">• Self-corrects on build/test failures</text>
+          <text x="386" y="672" font-family="Inter" font-size="10" fill="#1A1A1A">• Follows .github/copilot-instructions.md conventions</text>
+          <text x="386" y="688" font-family="JetBrains Mono" font-size="9" fill="#B31E2A">@workspace context</text>
+        </g>
+
+        <!-- Code Reviewer -->
+        <g>
+          <rect x="370" y="710" width="500" height="150" rx="3" fill="#B31E2A" stroke="#8A1620" stroke-width="2"/>
+          <rect x="370" y="710" width="500" height="36" fill="#8A1620"/>
+          <text x="386" y="733" font-family="Inter" font-size="12" font-weight="600" fill="#FAF6F0">@code-reviewer</text>
+          <text x="700" y="733" font-family="JetBrains Mono" font-size="10" fill="rgba(250,246,240,0.7)">model: Claude Opus 4.6</text>
+
+          <text x="386" y="769" font-family="Inter" font-size="11" font-weight="600" fill="#FAF6F0">Validates implementation against original ACs</text>
+
+          <text x="386" y="791" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">• Reviews diff vs original JIRA ticket ACs</text>
+          <text x="386" y="807" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">• Produces coverage matrix: AC → code → test</text>
+          <text x="386" y="823" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">• Flags pattern violations vs copilot-instructions.md</text>
+          <text x="386" y="839" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">• Surfaces cross-repo risks before PR submission</text>
+          <text x="386" y="853" font-family="JetBrains Mono" font-size="9" fill="#F2A900">code-reviewer.agent.md</text>
+        </g>
+
+        <!-- ============ CONTEXT SOURCES (Right column) ============ -->
+        <rect x="940" y="80" width="500" height="800" rx="4" fill="none" stroke="#D8D2C7" stroke-width="1" stroke-dasharray="4 4"/>
+        <text x="955" y="105" font-family="Inter" font-size="10" font-weight="700" fill="#6B6B6B" letter-spacing="1.5">MCP CONTEXT SOURCES · queried in parallel</text>
+
+        <!-- JIRA MCP -->
+        <g>
+          <rect x="960" y="125" width="460" height="125" rx="3" fill="white" stroke="#6B6B6B" stroke-width="1.5"/>
+          <rect x="960" y="125" width="460" height="30" fill="#0F1B2D"/>
+          <text x="976" y="146" font-family="Inter" font-size="12" font-weight="600" fill="#FAF6F0">JIRA MCP Server</text>
+          <text x="1380" y="146" text-anchor="end" font-family="JetBrains Mono" font-size="9" fill="#F2A900">mcp-atlassian (npm)</text>
+
+          <text x="976" y="178" font-family="Inter" font-size="11" fill="#1A1A1A">Tool: <tspan font-family="JetBrains Mono" font-size="10" fill="#B31E2A">get_issue(key)</tspan></text>
+          <text x="976" y="198" font-family="Inter" font-size="10" fill="#6B6B6B">Returns: title, description, acceptance criteria, comments,</text>
+          <text x="976" y="214" font-family="Inter" font-size="10" fill="#6B6B6B">linked tickets, labels, components, priority</text>
+
+          <line x1="976" y1="226" x2="1400" y2="226" stroke="#D8D2C7"/>
+          <text x="976" y="243" font-family="Inter" font-size="9" font-weight="600" fill="#6B6B6B" letter-spacing="1">SCOPE</text>
+          <text x="1050" y="243" font-family="Inter" font-size="9" fill="#1A1A1A">Read-only · InfoSec reviewed · org network</text>
+        </g>
+
+        <!-- DeepWiki MCP -->
+        <g>
+          <rect x="960" y="270" width="460" height="190" rx="3" fill="white" stroke="#F2A900" stroke-width="2"/>
+          <rect x="960" y="270" width="460" height="30" fill="#F2A900"/>
+          <text x="976" y="291" font-family="Inter" font-size="12" font-weight="600" fill="#1A1A1A">DeepWiki MCP Server</text>
+          <text x="1380" y="291" text-anchor="end" font-family="JetBrains Mono" font-size="9" fill="#1A1A1A">mcp.devin.ai · PHASE 1 ONLY</text>
+
+          <text x="976" y="320" font-family="Inter" font-size="11" font-weight="600" fill="#1A1A1A">Cross-repo documentation for all 35 repos</text>
+
+          <text x="976" y="342" font-family="Inter" font-size="11" fill="#1A1A1A">Tools:</text>
+          <text x="996" y="360" font-family="JetBrains Mono" font-size="10" fill="#B31E2A">ask_question(repo, query)</text>
+          <text x="996" y="378" font-family="JetBrains Mono" font-size="10" fill="#B31E2A">read_wiki_contents(repo)</text>
+          <text x="996" y="396" font-family="JetBrains Mono" font-size="10" fill="#B31E2A">read_wiki_structure(repo)</text>
+
+          <line x1="976" y1="408" x2="1400" y2="408" stroke="#D8D2C7"/>
+          <text x="976" y="425" font-family="Inter" font-size="9" font-weight="600" fill="#6B6B6B" letter-spacing="1">COST</text>
+          <text x="1050" y="425" font-family="Inter" font-size="9" fill="#1A1A1A">~$2.00/ACU · bounded MVP usage ~$50 total</text>
+          <text x="976" y="441" font-family="Inter" font-size="9" font-weight="600" fill="#6B6B6B" letter-spacing="1">REPLACED</text>
+          <text x="1050" y="441" font-family="Inter" font-size="9" fill="#B31E2A">In Phase 2 by self-hosted pathfinder-hub MCP</text>
+        </g>
+
+        <!-- Local Workspace -->
+        <g>
+          <rect x="960" y="480" width="460" height="180" rx="3" fill="white" stroke="#1F6F6F" stroke-width="2"/>
+          <rect x="960" y="480" width="460" height="30" fill="#1F6F6F"/>
+          <text x="976" y="501" font-family="Inter" font-size="12" font-weight="600" fill="#FAF6F0">Local Repo Context · @workspace</text>
+          <text x="1380" y="501" text-anchor="end" font-family="JetBrains Mono" font-size="9" fill="#F2A900">Copilot native</text>
+
+          <text x="976" y="530" font-family="Inter" font-size="11" font-weight="600" fill="#1A1A1A">Files indexed by Copilot in current repo:</text>
+
+          <text x="976" y="554" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">.github/copilot-instructions.md</text>
+          <text x="1240" y="554" font-family="Inter" font-size="9" fill="#6B6B6B">→ team conventions</text>
+
+          <text x="976" y="574" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">.github/architecture-manifest.json</text>
+          <text x="1240" y="574" font-family="Inter" font-size="9" fill="#6B6B6B">→ components, APIs, schemas</text>
+
+          <text x="976" y="594" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">AGENTS.md</text>
+          <text x="1240" y="594" font-family="Inter" font-size="9" fill="#6B6B6B">→ cross-tool context</text>
+
+          <text x="976" y="614" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">src/hooks/.instructions.md</text>
+          <text x="1240" y="614" font-family="Inter" font-size="9" fill="#6B6B6B">→ scoped subdirectory rules</text>
+
+          <text x="976" y="634" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">All source files in /src</text>
+          <text x="1240" y="634" font-family="Inter" font-size="9" fill="#6B6B6B">→ semantic indexed</text>
+        </g>
+
+        <!-- Per-repo files inventory -->
+        <g>
+          <rect x="960" y="680" width="460" height="180" rx="3" fill="white" stroke="#D8D2C7" stroke-width="1.5"/>
+          <rect x="960" y="680" width="460" height="30" fill="#0F1B2D"/>
+          <text x="976" y="701" font-family="Inter" font-size="12" font-weight="600" fill="#FAF6F0">Files Created Per MVP Repo</text>
+          <text x="1380" y="701" text-anchor="end" font-family="Inter" font-size="9" fill="rgba(250,246,240,0.7)">3 repos × 7 files</text>
+
+          <text x="976" y="730" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">.github/copilot-instructions.md</text>
+          <text x="976" y="748" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">.github/architecture-manifest.json</text>
+          <text x="976" y="766" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">.github/agents/story-analyzer.agent.md</text>
+          <text x="976" y="784" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">.github/agents/implementation-planner.agent.md</text>
+          <text x="976" y="802" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">.github/agents/code-reviewer.agent.md</text>
+          <text x="976" y="820" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">AGENTS.md</text>
+          <text x="976" y="838" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">.vscode/mcp.json</text>
+
+          <text x="1230" y="730" font-family="Inter" font-size="9" fill="#6B6B6B">→ Copilot /init + /create-instructions</text>
+          <text x="1230" y="748" font-family="Inter" font-size="9" fill="#6B6B6B">→ Copilot @workspace analysis</text>
+          <text x="1230" y="766" font-family="Inter" font-size="9" fill="#6B6B6B">→ Hand-crafted from template</text>
+          <text x="1230" y="784" font-family="Inter" font-size="9" fill="#6B6B6B">→ Hand-crafted from template</text>
+          <text x="1230" y="802" font-family="Inter" font-size="9" fill="#6B6B6B">→ Hand-crafted from template</text>
+          <text x="1230" y="820" font-family="Inter" font-size="9" fill="#6B6B6B">→ Hand-crafted per repo</text>
+          <text x="1230" y="838" font-family="Inter" font-size="9" fill="#6B6B6B">→ Templated, one-time</text>
+        </g>
+
+        <!-- ============ OUTPUTS (Right column) ============ -->
+        <g>
+          <rect x="1460" y="125" width="420" height="240" rx="3" fill="#0F1B2D" stroke="#0F1B2D"/>
+          <rect x="1460" y="125" width="420" height="32" fill="#1A2942"/>
+          <text x="1476" y="146" font-family="Inter" font-size="12" font-weight="600" fill="#FAF6F0">OUTPUT · Technical Details</text>
+          <text x="1864" y="146" text-anchor="end" font-family="JetBrains Mono" font-size="9" fill="#F2A900">to JIRA ticket</text>
+
+          <text x="1476" y="178" font-family="Inter" font-size="11" fill="#FAF6F0">Posted as JIRA comment / description:</text>
+
+          <text x="1476" y="204" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">▸ Affected repos (with confidence + reasoning)</text>
+          <text x="1476" y="222" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">▸ Components to modify (with file paths)</text>
+          <text x="1476" y="240" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">▸ New components needed (location + pattern)</text>
+          <text x="1476" y="258" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">▸ API changes (endpoints, request/response shapes)</text>
+          <text x="1476" y="276" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">▸ Database impact (collections, fields, indexes)</text>
+          <text x="1476" y="294" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">▸ Shared component impact (design system)</text>
+          <text x="1476" y="312" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">▸ Cross-repo dependencies</text>
+          <text x="1476" y="330" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">▸ AC mapping (which AC → which code change)</text>
+          <text x="1476" y="348" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">▸ Risk areas (testing focus)</text>
+        </g>
+
+        <g>
+          <rect x="1460" y="385" width="420" height="190" rx="3" fill="#0F1B2D" stroke="#0F1B2D"/>
+          <rect x="1460" y="385" width="420" height="32" fill="#1A2942"/>
+          <text x="1476" y="406" font-family="Inter" font-size="12" font-weight="600" fill="#FAF6F0">OUTPUT · Implementation Plan</text>
+          <text x="1864" y="406" text-anchor="end" font-family="JetBrains Mono" font-size="9" fill="#F2A900">in Copilot session</text>
+
+          <text x="1476" y="438" font-family="Inter" font-size="11" fill="#FAF6F0">Ordered, file-by-file plan:</text>
+
+          <text x="1476" y="464" font-family="JetBrains Mono" font-size="10" fill="#F2A900">1.</text>
+          <text x="1500" y="464" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">CREATE src/hooks/useCopyKycForm.ts</text>
+          <text x="1500" y="478" font-family="Inter" font-size="9" fill="rgba(250,246,240,0.6)">    follow pattern: useKycForm.ts</text>
+
+          <text x="1476" y="500" font-family="JetBrains Mono" font-size="10" fill="#F2A900">2.</text>
+          <text x="1500" y="500" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">MODIFY KycFormContainer.tsx</text>
+          <text x="1500" y="514" font-family="Inter" font-size="9" fill="rgba(250,246,240,0.6)">    add Copy button + modal</text>
+
+          <text x="1476" y="536" font-family="JetBrains Mono" font-size="10" fill="#F2A900">3.</text>
+          <text x="1500" y="536" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">CREATE __tests__/useCopyKycForm.test.ts</text>
+
+          <text x="1476" y="558" font-family="JetBrains Mono" font-size="10" fill="#B31E2A">⚠</text>
+          <text x="1500" y="558" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">CROSS-REPO: kyc-service needs new endpoint</text>
+        </g>
+
+        <g>
+          <rect x="1460" y="595" width="420" height="180" rx="3" fill="#0F1B2D" stroke="#0F1B2D"/>
+          <rect x="1460" y="595" width="420" height="32" fill="#1A2942"/>
+          <text x="1476" y="616" font-family="Inter" font-size="12" font-weight="600" fill="#FAF6F0">OUTPUT · Code + Review</text>
+          <text x="1864" y="616" text-anchor="end" font-family="JetBrains Mono" font-size="9" fill="#F2A900">in PR</text>
+
+          <text x="1476" y="648" font-family="Inter" font-size="11" fill="#FAF6F0">Generated code + reviewer assessment:</text>
+
+          <text x="1476" y="674" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">▸ Code following copilot-instructions.md</text>
+          <text x="1476" y="692" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">▸ Unit tests per implementation step</text>
+          <text x="1476" y="710" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">▸ AC coverage matrix (which AC ↔ which code)</text>
+          <text x="1476" y="728" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">▸ Pattern compliance check</text>
+          <text x="1476" y="746" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">▸ Cross-repo risk flags</text>
+          <text x="1476" y="764" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">▸ Ready for human PR review</text>
+        </g>
+
+        <!-- ============ ANIMATED FLOW LINES (Pulses) ============ -->
+        <!-- Dev → Story Analyzer -->
+        <path class="flow-line teal thick" d="M 280 400 Q 320 400, 370 215" marker-end="url(#arrT)"/>
+
+        <!-- Story Analyzer → JIRA MCP (parallel context query) -->
+        <path class="flow-line gold" d="M 870 187 Q 905 187, 960 187" marker-end="url(#arrG)"/>
+        <!-- JIRA MCP → Story Analyzer (response) -->
+        <path class="flow-line gold reverse" d="M 960 215 Q 905 215, 870 215"/>
+
+        <!-- Story Analyzer → DeepWiki MCP (parallel context query) -->
+        <path class="flow-line gold" d="M 870 230 Q 905 230, 960 365" marker-end="url(#arrG)"/>
+        <!-- DeepWiki → Story Analyzer -->
+        <path class="flow-line gold reverse" d="M 960 380 Q 905 260, 870 260"/>
+
+        <!-- Story Analyzer → Local Workspace -->
+        <path class="flow-line gold" d="M 870 275 Q 905 275, 960 570" marker-end="url(#arrG)"/>
+        <!-- Workspace → Story Analyzer -->
+        <path class="flow-line gold reverse" d="M 960 585 Q 905 290, 870 290"/>
+
+        <!-- Story Analyzer → OUTPUT Technical Details -->
+        <path class="flow-line red thick" d="M 870 215 Q 1100 215, 1460 215" marker-end="url(#arrR)"/>
+
+        <!-- Story Analyzer ↓ Planner (internal handoff) -->
+        <path class="flow-line red" d="M 620 308 L 620 348" marker-end="url(#arrR)"/>
+
+        <!-- Planner → Implementation Plan output -->
+        <path class="flow-line red thick" d="M 870 445 Q 1100 445, 1460 480" marker-end="url(#arrR)"/>
+
+        <!-- Planner ↓ Agent Mode -->
+        <path class="flow-line red" d="M 620 533 L 620 573" marker-end="url(#arrR)"/>
+
+        <!-- Agent Mode ↓ Reviewer -->
+        <path class="flow-line red" d="M 620 697 L 620 708" marker-end="url(#arrR)"/>
+
+        <!-- Reviewer → Code+Review output -->
+        <path class="flow-line red thick" d="M 870 800 Q 1100 800, 1460 690" marker-end="url(#arrR)"/>
+
+        <!-- Reviewer → reads workspace + jira -->
+        <path class="flow-line gold" d="M 870 770 Q 905 770, 960 220" marker-end="url(#arrG)"/>
+
+        <!-- ============ PULSE DOTS (continuous flowing markers) ============ -->
+        <!-- Dot moving Dev → Story Analyzer -->
+        <circle r="4" class="pulse-dot teal">
+          <animateMotion dur="2.5s" repeatCount="indefinite" path="M 280 400 Q 320 400, 370 215"/>
+        </circle>
+
+        <!-- Dot Story Analyzer → JIRA -->
+        <circle r="3.5" class="pulse-dot gold">
+          <animateMotion dur="2s" repeatCount="indefinite" begin="0.3s" path="M 870 187 Q 905 187, 960 187"/>
+        </circle>
+        <!-- JIRA → Analyzer -->
+        <circle r="3.5" class="pulse-dot gold">
+          <animateMotion dur="2s" repeatCount="indefinite" begin="1.3s" path="M 960 215 Q 905 215, 870 215"/>
+        </circle>
+
+        <!-- Analyzer → DeepWiki -->
+        <circle r="3.5" class="pulse-dot gold">
+          <animateMotion dur="2.2s" repeatCount="indefinite" begin="0.5s" path="M 870 230 Q 905 230, 960 365"/>
+        </circle>
+        <circle r="3.5" class="pulse-dot gold">
+          <animateMotion dur="2.2s" repeatCount="indefinite" begin="1.6s" path="M 960 380 Q 905 260, 870 260"/>
+        </circle>
+
+        <!-- Analyzer → Workspace -->
+        <circle r="3.5" class="pulse-dot gold">
+          <animateMotion dur="2.4s" repeatCount="indefinite" begin="0.7s" path="M 870 275 Q 905 275, 960 570"/>
+        </circle>
+        <circle r="3.5" class="pulse-dot gold">
+          <animateMotion dur="2.4s" repeatCount="indefinite" begin="1.9s" path="M 960 585 Q 905 290, 870 290"/>
+        </circle>
+
+        <!-- Analyzer → Tech Details OUTPUT -->
+        <circle r="4.5" class="pulse-dot">
+          <animateMotion dur="3s" repeatCount="indefinite" begin="2.2s" path="M 870 215 Q 1100 215, 1460 215"/>
+        </circle>
+
+        <!-- Analyzer ↓ Planner internal -->
+        <circle r="3.5" class="pulse-dot">
+          <animateMotion dur="1.5s" repeatCount="indefinite" begin="3s" path="M 620 308 L 620 348"/>
+        </circle>
+
+        <!-- Planner → Plan OUTPUT -->
+        <circle r="4.5" class="pulse-dot">
+          <animateMotion dur="3s" repeatCount="indefinite" begin="3.5s" path="M 870 445 Q 1100 445, 1460 480"/>
+        </circle>
+
+        <!-- Planner ↓ Agent Mode -->
+        <circle r="3.5" class="pulse-dot">
+          <animateMotion dur="1.5s" repeatCount="indefinite" begin="4s" path="M 620 533 L 620 573"/>
+        </circle>
+
+        <!-- Agent Mode ↓ Reviewer -->
+        <circle r="3.5" class="pulse-dot">
+          <animateMotion dur="1.5s" repeatCount="indefinite" begin="5s" path="M 620 697 L 620 708"/>
+        </circle>
+
+        <!-- Reviewer → final OUTPUT -->
+        <circle r="4.5" class="pulse-dot">
+          <animateMotion dur="3s" repeatCount="indefinite" begin="5.5s" path="M 870 800 Q 1100 800, 1460 690"/>
+        </circle>
+
+        <!-- Reviewer → reads workspace+jira (validation) -->
+        <circle r="3.5" class="pulse-dot gold">
+          <animateMotion dur="2.5s" repeatCount="indefinite" begin="6s" path="M 870 770 Q 905 770, 960 220"/>
+        </circle>
+      </svg>
+    </div>
+
+    <div class="legend-strip">
+      <div class="legend-item"><div class="legend-line teal"></div><span>Developer input</span></div>
+      <div class="legend-item"><div class="legend-line gold"></div><span>MCP context query (parallel)</span></div>
+      <div class="legend-item"><div class="legend-line red"></div><span>Agent handoff / output</span></div>
+      <div class="legend-item"><div class="legend-swatch" style="background: #B31E2A;"></div><span>Pathfinder agent</span></div>
+      <div class="legend-item"><div class="legend-swatch" style="background: #0F1B2D;"></div><span>Output destination</span></div>
+      <div class="legend-item" style="margin-left: auto;"><span style="font-family: var(--ff-mono); font-size: 0.7rem;">Flowing pulses indicate active data exchange</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 7 ============ -->
+<section data-background-color="#FAF6F0">
+  <div class="slide-frame has-sidebar"><div class="slide-main">
+    <div class="eyebrow"><span class="mark">PHASE 01 · VALIDATE</span><span>07 / 16 · Phase 01 · Files</span></div>
+    <div class="slide-kicker">What we create per repo</div>
+    <h2 class="slide-title">Seven files. Three agents. Zero servers.</h2>
+
+    <div class="file-grid">
+      <div class="file-col">
+        <h3>Per-Repo Configuration</h3>
+        <div class="file-row auto-reveal" data-delay="1">
+          <div class="file-path">.github/copilot-instructions.md</div>
+        </div>
+        <div class="file-row auto-reveal" data-delay="2" style="border-top:none; padding-top:0;">
+          <div class="file-purpose">Coding standards, patterns, conventions — used by all Copilot generations</div>
+        </div>
+        <div class="file-row auto-reveal" data-delay="3">
+          <div class="file-path">.github/architecture-manifest.json</div>
+        </div>
+        <div class="file-row auto-reveal" data-delay="4" style="border-top:none; padding-top:0;">
+          <div class="file-purpose">Machine-readable map: components, hooks, APIs, MongoDB collections, dependencies</div>
+        </div>
+        <div class="file-row auto-reveal" data-delay="5">
+          <div class="file-path">AGENTS.md</div>
+        </div>
+        <div class="file-row auto-reveal" data-delay="6" style="border-top:none; padding-top:0;">
+          <div class="file-purpose">Cross-tool context standard (Linux Foundation) for Copilot, Claude, Devin</div>
+        </div>
+        <div class="file-row auto-reveal" data-delay="7">
+          <div class="file-path">.vscode/mcp.json</div>
+        </div>
+        <div class="file-row auto-reveal" data-delay="8" style="border-top:none; padding-top:0;">
+          <div class="file-purpose">MCP server configuration — JIRA + DeepWiki in Phase 1</div>
+        </div>
+      </div>
+
+      <div class="file-col">
+        <h3 style="color: var(--primary-red);">The Three Pathfinder Agents</h3>
+        <div class="file-row auto-reveal" data-delay="9">
+          <div class="file-path">story-analyzer.agent.md</div>
+        </div>
+        <div class="file-row auto-reveal" data-delay="10" style="border-top:none; padding-top:0;">
+          <div class="file-purpose">Reads JIRA ticket → queries cross-repo context → identifies affected repos, components, APIs with file-path citations</div>
+        </div>
+        <div class="file-row auto-reveal" data-delay="10">
+          <div class="file-path">implementation-planner.agent.md</div>
+        </div>
+        <div class="file-row auto-reveal" data-delay="10" style="border-top:none; padding-top:0;">
+          <div class="file-purpose">Receives analysis → produces ordered, file-by-file plan with explicit pattern references</div>
+        </div>
+        <div class="file-row auto-reveal" data-delay="10">
+          <div class="file-path">code-reviewer.agent.md</div>
+        </div>
+        <div class="file-row auto-reveal" data-delay="10" style="border-top:none; padding-top:0;">
+          <div class="file-purpose">Reviews implementation against original story ACs — coverage matrix + pattern compliance + cross-repo risk</div>
+        </div>
+        <div style="margin-top: 20px; padding: 16px; background: var(--cream-warm); border-left: 3px solid var(--accent-gold); font-size: 0.82rem; color: var(--charcoal);" class="auto-reveal" data-delay="10">
+          <strong style="font-family: var(--ff-body); font-weight: 600;">Generation method:</strong><br/>
+          Copilot <code style="font-family: var(--ff-mono); font-size: 0.85em; background: white; padding: 1px 6px;">/init</code> + <code style="font-family: var(--ff-mono); font-size: 0.85em; background: white; padding: 1px 6px;">/create-instructions</code> generates the bulk. Human review + refinement before commit.
+        </div>
+      </div>
+    </div>
+
+    <div class="accent-bar phase-1"></div>
+  </div><div class="quick-facts">
+      <div class="qf-label auto-reveal" data-delay="1">Footprint</div>
+      <div class="qf-item auto-reveal" data-delay="1">
+        <div class="qf-key">Per repo</div>
+        <div class="qf-num gold">7 files</div>
+        <div class="qf-detail">4 config + 3 agents</div>
+      </div><div class="qf-item auto-reveal" data-delay="2">
+        <div class="qf-key">Across 3 MVP repos</div>
+        <div class="qf-num">21 files</div>
+        <div class="qf-detail">Most are templated, identical</div>
+      </div><div class="qf-item auto-reveal" data-delay="3">
+        <div class="qf-key">Hand-crafted work</div>
+        <div class="qf-num gold">~3 hours</div>
+        <div class="qf-detail">Per repo, first-time setup</div>
+      </div><div class="qf-item auto-reveal" data-delay="4">
+        <div class="qf-key">Servers deployed</div>
+        <div class="qf-num">0</div>
+        <div class="qf-detail">Runs on developer laptops</div>
+      </div>
+    </div></div></section>
+
+<!-- ============ SLIDE 8 ============ -->
+<section data-background-color="#FAF6F0">
+  <div class="detail-slide">
+    <div class="caption-strip">
+      <div class="phase-mark">
+        <div class="phase-num">02</div>
+        <div class="phase-info">
+          <div class="phase-tag">Phase Two · Scale</div>
+          <div class="phase-name">Self-Hosted Knowledge Hub</div>
+        </div>
+      </div>
+      <div class="phase-desc">All 35 repos' documentation exported from DeepWiki, enhanced, and self-hosted in pathfinder-hub. Eliminates Devin ACU dependency. Extends Pathfinder to PO story-writing via JIRA automation. Single source of truth, synced reflections.</div>
+      <div class="phase-meta">
+        <div class="meta-label">Duration · Cost · Scope</div>
+        <div class="meta-value">4 weeks · ~$160 + $50/mo · 35 repos</div>
+      </div>
+    </div>
+
+    <div class="diagram-canvas">
+      <svg viewBox="0 0 1920 920" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <marker id="arrR2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="#B31E2A"/>
+          </marker>
+          <marker id="arrG2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="#F2A900"/>
+          </marker>
+          <marker id="arrT2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="#1F6F6F"/>
+          </marker>
+          <marker id="arrN2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="#0F1B2D"/>
+          </marker>
+        </defs>
+
+        <!-- Column headers -->
+        <text x="60" y="40" font-family="Inter" font-size="11" font-weight="700" fill="#6B6B6B" letter-spacing="2.4">CONSUMERS</text>
+        <text x="640" y="40" font-family="Inter" font-size="11" font-weight="700" fill="#6B6B6B" letter-spacing="2.4">PATHFINDER-HUB · SINGLE SOURCE OF TRUTH</text>
+        <text x="1500" y="40" font-family="Inter" font-size="11" font-weight="700" fill="#6B6B6B" letter-spacing="2.4">35 POLYREPOS · SYNCED REFLECTIONS</text>
+        <line x1="40" y1="55" x2="1880" y2="55" stroke="#D8D2C7" stroke-width="1"/>
+
+        <!-- ========== CONSUMERS (left) ========== -->
+        <!-- Developer -->
+        <g>
+          <rect x="40" y="100" width="280" height="180" rx="3" fill="white" stroke="#1F6F6F" stroke-width="2"/>
+          <rect x="40" y="100" width="280" height="32" fill="#1F6F6F"/>
+          <text x="56" y="121" font-family="Inter" font-size="12" font-weight="600" fill="#FAF6F0">DEVELOPER · VSCode Copilot</text>
+
+          <text x="56" y="154" font-family="Inter" font-size="11" font-weight="600" fill="#1A1A1A">Pathfinder agents query hub via:</text>
+          <text x="56" y="174" font-family="JetBrains Mono" font-size="10" fill="#1F6F6F">.vscode/mcp.json → pathfinder-hub</text>
+
+          <text x="56" y="200" font-family="Inter" font-size="10" fill="#6B6B6B">Transport: stdio (local MCP client)</text>
+          <text x="56" y="216" font-family="Inter" font-size="10" fill="#6B6B6B">Auth: org SSO token</text>
+          <text x="56" y="232" font-family="Inter" font-size="10" fill="#6B6B6B">Fallback: local manifest if hub down</text>
+
+          <line x1="56" y1="246" x2="304" y2="246" stroke="#D8D2C7"/>
+          <text x="56" y="262" font-family="Inter" font-size="9" font-weight="600" fill="#6B6B6B" letter-spacing="1">USES TOOLS</text>
+          <text x="160" y="262" font-family="JetBrains Mono" font-size="9" fill="#B31E2A">find_repos · impact_analysis</text>
+        </g>
+
+        <!-- Product Owner -->
+        <g>
+          <rect x="40" y="310" width="280" height="180" rx="3" fill="white" stroke="#F2A900" stroke-width="2"/>
+          <rect x="40" y="310" width="280" height="32" fill="#F2A900"/>
+          <text x="56" y="331" font-family="Inter" font-size="12" font-weight="600" fill="#1A1A1A">PRODUCT OWNER · JIRA Automation</text>
+
+          <text x="56" y="364" font-family="Inter" font-size="11" font-weight="600" fill="#1A1A1A">JIRA automation rule on story create:</text>
+          <text x="56" y="384" font-family="JetBrains Mono" font-size="10" fill="#C58800">webhook → hub.enhance_story()</text>
+
+          <text x="56" y="410" font-family="Inter" font-size="10" fill="#6B6B6B">Result posted as JIRA comment with</text>
+          <text x="56" y="426" font-family="Inter" font-size="10" fill="#6B6B6B">Technical Details section</text>
+
+          <line x1="56" y1="440" x2="304" y2="440" stroke="#D8D2C7"/>
+          <text x="56" y="456" font-family="Inter" font-size="9" font-weight="600" fill="#6B6B6B" letter-spacing="1">PO NEVER LEAVES JIRA</text>
+          <text x="56" y="472" font-family="Inter" font-size="9" fill="#1A1A1A">No new tool to learn</text>
+        </g>
+
+        <!-- Architect / Grooming session -->
+        <g>
+          <rect x="40" y="520" width="280" height="170" rx="3" fill="white" stroke="#0F1B2D" stroke-width="2"/>
+          <rect x="40" y="520" width="280" height="32" fill="#0F1B2D"/>
+          <text x="56" y="541" font-family="Inter" font-size="12" font-weight="600" fill="#FAF6F0">ARCHITECT · Grooming Session</text>
+
+          <text x="56" y="572" font-family="Inter" font-size="11" font-weight="600" fill="#1A1A1A">Slack bot or web UI:</text>
+          <text x="56" y="592" font-family="JetBrains Mono" font-size="10" fill="#B31E2A">/pathfinder impact useAuth</text>
+
+          <text x="56" y="618" font-family="Inter" font-size="10" fill="#6B6B6B">Returns affected repos + components</text>
+          <text x="56" y="634" font-family="Inter" font-size="10" fill="#6B6B6B">for cross-repo planning discussions</text>
+
+          <line x1="56" y1="650" x2="304" y2="650" stroke="#D8D2C7"/>
+          <text x="56" y="666" font-family="Inter" font-size="9" font-weight="600" fill="#6B6B6B" letter-spacing="1">CONSUMES TOOLS</text>
+          <text x="170" y="666" font-family="JetBrains Mono" font-size="9" fill="#B31E2A">impact_analysis · cross_repo_deps</text>
+        </g>
+
+        <!-- Quarterly Refresh / CI -->
+        <g>
+          <rect x="40" y="720" width="280" height="160" rx="3" fill="#0F1B2D" stroke="#0F1B2D"/>
+          <rect x="40" y="720" width="280" height="32" fill="#1A2942"/>
+          <text x="56" y="741" font-family="Inter" font-size="12" font-weight="600" fill="#FAF6F0">AUTOMATION · GitHub Actions</text>
+
+          <text x="56" y="772" font-family="Inter" font-size="11" font-weight="600" fill="#FAF6F0">Quarterly refresh GHA:</text>
+          <text x="56" y="790" font-family="JetBrains Mono" font-size="9" fill="#F2A900">.github/workflows/quarterly-refresh.yml</text>
+
+          <text x="56" y="816" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">▸ Re-runs Copilot wiki analysis on all 35</text>
+          <text x="56" y="832" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">▸ Diffs against existing wiki content</text>
+          <text x="56" y="848" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">▸ Opens PR with stale sections flagged</text>
+          <text x="56" y="864" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">▸ Human review before merge</text>
+        </g>
+
+        <!-- ========== PATHFINDER-HUB (center) ========== -->
+        <rect x="380" y="75" width="1080" height="810" rx="4" fill="white" stroke="#B31E2A" stroke-width="3"/>
+        <rect x="380" y="75" width="1080" height="44" fill="#B31E2A"/>
+        <text x="400" y="103" font-family="Fraunces" font-size="18" font-weight="500" fill="#FAF6F0">pathfinder-hub</text>
+        <text x="540" y="103" font-family="JetBrains Mono" font-size="11" fill="rgba(250,246,240,0.8)">github.com/org/pathfinder-hub</text>
+        <text x="1444" y="103" text-anchor="end" font-family="Inter" font-size="11" font-weight="600" fill="#F2A900" letter-spacing="2">SINGLE SOURCE OF TRUTH</text>
+
+        <!-- MCP Server (top of hub) -->
+        <g>
+          <rect x="400" y="140" width="1040" height="120" rx="3" fill="#F2A900" stroke="#C58800" stroke-width="2"/>
+          <rect x="400" y="140" width="1040" height="28" fill="#C58800"/>
+          <text x="416" y="159" font-family="Inter" font-size="12" font-weight="600" fill="#FAF6F0">mcp-server/server.py · FastAPI · stdio + SSE transports</text>
+
+          <text x="416" y="186" font-family="Inter" font-size="11" font-weight="600" fill="#1A1A1A">Six MCP tools exposed:</text>
+
+          <g transform="translate(420, 200)">
+            <rect x="0" y="0" width="155" height="44" rx="2" fill="white" stroke="#1A1A1A" stroke-width="0.5"/>
+            <text x="78" y="17" text-anchor="middle" font-family="JetBrains Mono" font-size="10" font-weight="600" fill="#B31E2A">find_repos_for_story</text>
+            <text x="78" y="33" text-anchor="middle" font-family="Inter" font-size="8" fill="#6B6B6B">story → affected repos</text>
+
+            <rect x="165" y="0" width="155" height="44" rx="2" fill="white" stroke="#1A1A1A" stroke-width="0.5"/>
+            <text x="243" y="17" text-anchor="middle" font-family="JetBrains Mono" font-size="10" font-weight="600" fill="#B31E2A">get_repo_context</text>
+            <text x="243" y="33" text-anchor="middle" font-family="Inter" font-size="8" fill="#6B6B6B">repo → full wiki+manifest</text>
+
+            <rect x="330" y="0" width="155" height="44" rx="2" fill="white" stroke="#1A1A1A" stroke-width="0.5"/>
+            <text x="408" y="17" text-anchor="middle" font-family="JetBrains Mono" font-size="10" font-weight="600" fill="#B31E2A">impact_analysis</text>
+            <text x="408" y="33" text-anchor="middle" font-family="Inter" font-size="8" fill="#6B6B6B">symbol → using repos</text>
+
+            <rect x="495" y="0" width="155" height="44" rx="2" fill="white" stroke="#1A1A1A" stroke-width="0.5"/>
+            <text x="573" y="17" text-anchor="middle" font-family="JetBrains Mono" font-size="10" font-weight="600" fill="#B31E2A">enhance_story</text>
+            <text x="573" y="33" text-anchor="middle" font-family="Inter" font-size="8" fill="#6B6B6B">draft + tech details</text>
+
+            <rect x="660" y="0" width="155" height="44" rx="2" fill="white" stroke="#1A1A1A" stroke-width="0.5"/>
+            <text x="738" y="17" text-anchor="middle" font-family="JetBrains Mono" font-size="10" font-weight="600" fill="#B31E2A">search_wiki</text>
+            <text x="738" y="33" text-anchor="middle" font-family="Inter" font-size="8" fill="#6B6B6B">full-text · all 35</text>
+
+            <rect x="825" y="0" width="190" height="44" rx="2" fill="white" stroke="#1A1A1A" stroke-width="0.5"/>
+            <text x="920" y="17" text-anchor="middle" font-family="JetBrains Mono" font-size="10" font-weight="600" fill="#B31E2A">cross_repo_dependencies</text>
+            <text x="920" y="33" text-anchor="middle" font-family="Inter" font-size="8" fill="#6B6B6B">repo → graph</text>
+          </g>
+        </g>
+
+        <!-- wiki/ folder -->
+        <g>
+          <rect x="400" y="280" width="500" height="170" rx="3" fill="#FAF6F0" stroke="#D8D2C7" stroke-width="1.5"/>
+          <rect x="400" y="280" width="500" height="28" fill="#0F1B2D"/>
+          <text x="416" y="299" font-family="Inter" font-size="12" font-weight="600" fill="#FAF6F0">📁 wiki/  · curated documentation · 35 repos</text>
+
+          <text x="416" y="325" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">wiki/mfe-checkout/</text>
+          <text x="600" y="325" font-family="Inter" font-size="9" fill="#6B6B6B">overview.md · architecture.md · components.md</text>
+
+          <text x="416" y="343" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">wiki/mfe-kyc/</text>
+          <text x="600" y="343" font-family="Inter" font-size="9" fill="#6B6B6B">api-contracts.md · domain-glossary.md</text>
+
+          <text x="416" y="361" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">wiki/payment-service/</text>
+          <text x="600" y="361" font-family="Inter" font-size="9" fill="#6B6B6B">data-model.md · endpoints.md</text>
+
+          <text x="416" y="379" font-family="JetBrains Mono" font-size="10" fill="#6B6B6B">... 32 more repos</text>
+
+          <line x1="416" y1="395" x2="884" y2="395" stroke="#D8D2C7"/>
+          <text x="416" y="412" font-family="Inter" font-size="9" font-weight="600" fill="#6B6B6B" letter-spacing="1">SOURCE</text>
+          <text x="478" y="412" font-family="Inter" font-size="9" fill="#1A1A1A">DeepWiki export + Copilot enhancement</text>
+          <text x="416" y="428" font-family="Inter" font-size="9" font-weight="600" fill="#6B6B6B" letter-spacing="1">UPDATED</text>
+          <text x="478" y="428" font-family="Inter" font-size="9" fill="#1A1A1A">Quarterly refresh + on major arch change</text>
+        </g>
+
+        <!-- manifests/ folder -->
+        <g>
+          <rect x="920" y="280" width="520" height="170" rx="3" fill="#FAF6F0" stroke="#B31E2A" stroke-width="2"/>
+          <rect x="920" y="280" width="520" height="28" fill="#B31E2A"/>
+          <text x="936" y="299" font-family="Inter" font-size="12" font-weight="600" fill="#FAF6F0">📁 manifests/  · AUTHORITATIVE  · machine-readable</text>
+
+          <text x="936" y="325" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">manifests/mfe-checkout.json</text>
+          <text x="936" y="343" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">manifests/mfe-kyc.json</text>
+          <text x="936" y="361" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">manifests/payment-service.json</text>
+          <text x="936" y="379" font-family="JetBrains Mono" font-size="10" fill="#6B6B6B">... 32 more</text>
+
+          <line x1="936" y1="395" x2="1424" y2="395" stroke="#D8D2C7"/>
+          <text x="936" y="412" font-family="Inter" font-size="9" font-weight="600" fill="#6B6B6B" letter-spacing="1">SCHEMA</text>
+          <text x="998" y="412" font-family="Inter" font-size="9" fill="#1A1A1A">repo · components · hooks · apiEndpoints · mongoCollections · sharedComponents · relatedRepos</text>
+          <text x="936" y="428" font-family="Inter" font-size="9" font-weight="600" fill="#6B6B6B" letter-spacing="1">DERIVES</text>
+          <text x="998" y="428" font-family="Inter" font-size="9" fill="#B31E2A">Per-repo .github/architecture-manifest.json is auto-synced FROM here</text>
+        </g>
+
+        <!-- cross-repo/ folder -->
+        <g>
+          <rect x="400" y="470" width="500" height="160" rx="3" fill="#FAF6F0" stroke="#D8D2C7" stroke-width="1.5"/>
+          <rect x="400" y="470" width="500" height="28" fill="#0F1B2D"/>
+          <text x="416" y="489" font-family="Inter" font-size="12" font-weight="600" fill="#FAF6F0">📁 cross-repo/  · inter-repo intelligence</text>
+
+          <text x="416" y="515" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">dependency-map.md</text>
+          <text x="600" y="515" font-family="Inter" font-size="9" fill="#6B6B6B">which repos depend on which</text>
+
+          <text x="416" y="533" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">shared-components-registry.md</text>
+          <text x="600" y="533" font-family="Inter" font-size="9" fill="#6B6B6B">design-system usage matrix · all 30 MFEs</text>
+
+          <text x="416" y="551" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">api-contracts-index.md</text>
+          <text x="600" y="551" font-family="Inter" font-size="9" fill="#6B6B6B">all REST endpoints · 5 backend services</text>
+
+          <text x="416" y="569" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">domain-glossary.md</text>
+          <text x="600" y="569" font-family="Inter" font-size="9" fill="#6B6B6B">business term → technical component (PO-facing)</text>
+
+          <line x1="416" y1="583" x2="884" y2="583" stroke="#D8D2C7"/>
+          <text x="416" y="600" font-family="Inter" font-size="9" font-weight="600" fill="#6B6B6B" letter-spacing="1">OWNERSHIP</text>
+          <text x="498" y="600" font-family="Inter" font-size="9" fill="#1A1A1A">Design system team · Backend leads · Platform owner</text>
+          <text x="416" y="616" font-family="Inter" font-size="9" font-weight="600" fill="#6B6B6B" letter-spacing="1">UPDATED</text>
+          <text x="498" y="616" font-family="Inter" font-size="9" fill="#1A1A1A">Triggered by contract changes via GHA detection</text>
+        </g>
+
+        <!-- scripts/ folder -->
+        <g>
+          <rect x="920" y="470" width="520" height="160" rx="3" fill="#FAF6F0" stroke="#1F6F6F" stroke-width="2"/>
+          <rect x="920" y="470" width="520" height="28" fill="#1F6F6F"/>
+          <text x="936" y="489" font-family="Inter" font-size="12" font-weight="600" fill="#FAF6F0">📁 scripts/ + .github/workflows/  · automation</text>
+
+          <text x="936" y="515" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">scripts/export-deepwiki.py</text>
+          <text x="1180" y="515" font-family="Inter" font-size="9" fill="#6B6B6B">one-time export (~$160 ACU)</text>
+
+          <text x="936" y="533" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">scripts/sync-manifests.sh</text>
+          <text x="1180" y="533" font-family="Inter" font-size="9" fill="#6B6B6B">pushes manifests to all 35 repos</text>
+
+          <text x="936" y="551" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">.github/workflows/sync-to-repos.yml</text>
+          <text x="1180" y="551" font-family="Inter" font-size="9" fill="#6B6B6B">on hub change → opens PRs</text>
+
+          <text x="936" y="569" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">.github/workflows/quarterly-refresh.yml</text>
+          <text x="1180" y="569" font-family="Inter" font-size="9" fill="#6B6B6B">scheduled refresh + drift detection</text>
+
+          <line x1="936" y1="583" x2="1424" y2="583" stroke="#D8D2C7"/>
+          <text x="936" y="600" font-family="Inter" font-size="9" font-weight="600" fill="#6B6B6B" letter-spacing="1">OWNER</text>
+          <text x="1000" y="600" font-family="Inter" font-size="9" fill="#1A1A1A">Named platform engineer — not "the team"</text>
+          <text x="936" y="616" font-family="Inter" font-size="9" font-weight="600" fill="#6B6B6B" letter-spacing="1">SLA</text>
+          <text x="1000" y="616" font-family="Inter" font-size="9" fill="#1A1A1A">Sync PRs opened within 2 min of hub merge</text>
+        </g>
+
+        <!-- Knowledge content sub-strip -->
+        <g>
+          <rect x="400" y="650" width="1040" height="220" rx="3" fill="white" stroke="#D8D2C7" stroke-width="1.5"/>
+          <rect x="400" y="650" width="1040" height="28" fill="#0F1B2D"/>
+          <text x="416" y="669" font-family="Inter" font-size="12" font-weight="600" fill="#FAF6F0">Example: how the hub answers a real query</text>
+
+          <text x="416" y="697" font-family="Inter" font-size="11" font-weight="600" fill="#1A1A1A">Query:</text>
+          <text x="476" y="697" font-family="JetBrains Mono" font-size="11" fill="#B31E2A">find_repos_for_story("client copies KYC form from previous submission")</text>
+
+          <text x="416" y="722" font-family="Inter" font-size="11" font-weight="600" fill="#1A1A1A">Hub queries:</text>
+          <text x="416" y="744" font-family="Inter" font-size="10" fill="#6B6B6B">  → manifests/*.json for "kyc" matches → mfe-kyc, kyc-service</text>
+          <text x="416" y="762" font-family="Inter" font-size="10" fill="#6B6B6B">  → wiki/mfe-kyc/components.md for KycFormContainer, useKycForm</text>
+          <text x="416" y="780" font-family="Inter" font-size="10" fill="#6B6B6B">  → wiki/kyc-service/data-model.md for kyc_submissions collection</text>
+          <text x="416" y="798" font-family="Inter" font-size="10" fill="#6B6B6B">  → cross-repo/shared-components-registry.md for FormField, DocumentViewer</text>
+          <text x="416" y="816" font-family="Inter" font-size="10" fill="#6B6B6B">  → cross-repo/api-contracts-index.md for GET /api/kyc/{clientId}/submissions</text>
+
+          <text x="416" y="848" font-family="Inter" font-size="11" font-weight="600" fill="#1A1A1A">Returns:</text>
+          <text x="486" y="848" font-family="Inter" font-size="10" fill="#1A1A1A">Affected: mfe-kyc (high) · kyc-service (high) · client-mfe (low) — with file-path citations + confidence scores</text>
+        </g>
+
+        <!-- ========== 35 REPOS (right) ========== -->
+        <!-- Container -->
+        <rect x="1500" y="75" width="380" height="810" rx="4" fill="none" stroke="#D8D2C7" stroke-width="1" stroke-dasharray="4 4"/>
+        <text x="1515" y="98" font-family="Inter" font-size="10" font-weight="700" fill="#6B6B6B" letter-spacing="1.5">DERIVED COPIES · NEVER EDITED LOCALLY</text>
+
+        <!-- Individual repo cards (sample 8 shown, label others) -->
+        <g font-family="Inter" font-size="10" font-weight="600" fill="#1A1A1A">
+          <rect x="1515" y="115" width="170" height="60" rx="2" fill="white" stroke="#D8D2C7"/>
+          <text x="1525" y="133">mfe-checkout</text>
+          <text x="1525" y="148" font-family="JetBrains Mono" font-size="8" fill="#6B6B6B" font-weight="400">.github/architecture-manifest.json</text>
+          <text x="1525" y="161" font-family="JetBrains Mono" font-size="8" fill="#6B6B6B" font-weight="400">.github/agents/*.agent.md</text>
+
+          <rect x="1695" y="115" width="170" height="60" rx="2" fill="white" stroke="#D8D2C7"/>
+          <text x="1705" y="133">mfe-kyc</text>
+          <text x="1705" y="148" font-family="JetBrains Mono" font-size="8" fill="#6B6B6B" font-weight="400">.github/architecture-manifest.json</text>
+          <text x="1705" y="161" font-family="JetBrains Mono" font-size="8" fill="#6B6B6B" font-weight="400">.github/agents/*.agent.md</text>
+
+          <rect x="1515" y="185" width="170" height="60" rx="2" fill="white" stroke="#D8D2C7"/>
+          <text x="1525" y="203">mfe-orders</text>
+          <text x="1525" y="218" font-family="JetBrains Mono" font-size="8" fill="#6B6B6B" font-weight="400">.github/architecture-manifest.json</text>
+          <text x="1525" y="231" font-family="JetBrains Mono" font-size="8" fill="#6B6B6B" font-weight="400">.github/agents/*.agent.md</text>
+
+          <rect x="1695" y="185" width="170" height="60" rx="2" fill="white" stroke="#D8D2C7"/>
+          <text x="1705" y="203">mfe-payment</text>
+          <text x="1705" y="218" font-family="JetBrains Mono" font-size="8" fill="#6B6B6B" font-weight="400">.github/architecture-manifest.json</text>
+          <text x="1705" y="231" font-family="JetBrains Mono" font-size="8" fill="#6B6B6B" font-weight="400">.github/agents/*.agent.md</text>
+
+          <rect x="1515" y="255" width="170" height="60" rx="2" fill="white" stroke="#D8D2C7"/>
+          <text x="1525" y="273">design-system</text>
+          <text x="1525" y="288" font-family="JetBrains Mono" font-size="8" fill="#6B6B6B" font-weight="400">.github/architecture-manifest.json</text>
+          <text x="1525" y="301" font-family="JetBrains Mono" font-size="8" fill="#6B6B6B" font-weight="400">.github/agents/*.agent.md</text>
+
+          <rect x="1695" y="255" width="170" height="60" rx="2" fill="white" stroke="#D8D2C7"/>
+          <text x="1705" y="273">shared-utils</text>
+          <text x="1705" y="288" font-family="JetBrains Mono" font-size="8" fill="#6B6B6B" font-weight="400">.github/architecture-manifest.json</text>
+          <text x="1705" y="301" font-family="JetBrains Mono" font-size="8" fill="#6B6B6B" font-weight="400">.github/agents/*.agent.md</text>
+
+          <rect x="1515" y="325" width="170" height="60" rx="2" fill="white" stroke="#D8D2C7"/>
+          <text x="1525" y="343">payment-service</text>
+          <text x="1525" y="358" font-family="JetBrains Mono" font-size="8" fill="#6B6B6B" font-weight="400">java · spring-boot</text>
+          <text x="1525" y="371" font-family="JetBrains Mono" font-size="8" fill="#6B6B6B" font-weight="400">@Document KYCSubmission</text>
+
+          <rect x="1695" y="325" width="170" height="60" rx="2" fill="white" stroke="#D8D2C7"/>
+          <text x="1705" y="343">kyc-service</text>
+          <text x="1705" y="358" font-family="JetBrains Mono" font-size="8" fill="#6B6B6B" font-weight="400">java · spring-boot</text>
+          <text x="1705" y="371" font-family="JetBrains Mono" font-size="8" fill="#6B6B6B" font-weight="400">@Document KycForm</text>
+
+          <rect x="1515" y="395" width="350" height="60" rx="2" fill="#FAF6F0" stroke="#D8D2C7" stroke-dasharray="3 3"/>
+          <text x="1525" y="418" fill="#6B6B6B">+ 27 more MFE repos</text>
+          <text x="1525" y="438" font-family="JetBrains Mono" font-size="8" fill="#6B6B6B" font-weight="400">each receives identical sync PRs</text>
+        </g>
+
+        <!-- Sync mechanism explanation -->
+        <g>
+          <rect x="1515" y="475" width="350" height="200" rx="3" fill="#0F1B2D"/>
+          <rect x="1515" y="475" width="350" height="28" fill="#1A2942"/>
+          <text x="1531" y="494" font-family="Inter" font-size="11" font-weight="600" fill="#FAF6F0">SYNC MECHANISM</text>
+
+          <text x="1531" y="520" font-family="Inter" font-size="10" font-weight="600" fill="#F2A900">1. Hub manifest changes (merge)</text>
+          <text x="1531" y="536" font-family="Inter" font-size="9" fill="rgba(250,246,240,0.8)">    → GitHub Action sync-to-repos.yml fires</text>
+
+          <text x="1531" y="558" font-family="Inter" font-size="10" font-weight="600" fill="#F2A900">2. Action diffs changed manifests</text>
+          <text x="1531" y="574" font-family="Inter" font-size="9" fill="rgba(250,246,240,0.8)">    → Identifies affected per-repo files</text>
+
+          <text x="1531" y="596" font-family="Inter" font-size="10" font-weight="600" fill="#F2A900">3. Opens PR in each affected repo</text>
+          <text x="1531" y="612" font-family="Inter" font-size="9" fill="rgba(250,246,240,0.8)">    → "[pathfinder-hub-sync] Update manifest"</text>
+
+          <text x="1531" y="634" font-family="Inter" font-size="10" font-weight="600" fill="#F2A900">4. Repo team reviews & merges</text>
+          <text x="1531" y="650" font-family="Inter" font-size="9" fill="rgba(250,246,240,0.8)">    → Local copy refreshed (read-only intent)</text>
+
+          <text x="1531" y="672" font-family="Inter" font-size="10" font-weight="600" fill="#B31E2A">→ Never edit local copy. Edit hub.</text>
+        </g>
+
+        <!-- Fallback behavior -->
+        <g>
+          <rect x="1515" y="690" width="350" height="180" rx="3" fill="white" stroke="#F2A900" stroke-width="1.5"/>
+          <rect x="1515" y="690" width="350" height="28" fill="#F2A900"/>
+          <text x="1531" y="709" font-family="Inter" font-size="11" font-weight="600" fill="#1A1A1A">FALLBACK · MCP server unreachable</text>
+
+          <text x="1531" y="734" font-family="Inter" font-size="10" fill="#1A1A1A">If pathfinder-hub MCP is down, agents:</text>
+          <text x="1531" y="755" font-family="Inter" font-size="10" fill="#6B6B6B">▸ Use local .github/architecture-manifest.json</text>
+          <text x="1531" y="771" font-family="Inter" font-size="10" fill="#6B6B6B">▸ Use Copilot @workspace for current repo</text>
+          <text x="1531" y="787" font-family="Inter" font-size="10" fill="#6B6B6B">▸ Lose cross-repo intelligence temporarily</text>
+          <text x="1531" y="803" font-family="Inter" font-size="10" fill="#6B6B6B">▸ Story analysis quality degrades, doesn't fail</text>
+
+          <line x1="1531" y1="817" x2="1849" y2="817" stroke="#D8D2C7"/>
+          <text x="1531" y="836" font-family="Inter" font-size="9" font-weight="600" fill="#B31E2A" letter-spacing="1">PRINCIPLE</text>
+          <text x="1604" y="836" font-family="Inter" font-size="9" fill="#1A1A1A">Degraded, not broken. Single direction of trust.</text>
+          <text x="1531" y="853" font-family="Inter" font-size="9" font-weight="600" fill="#B31E2A" letter-spacing="1">RECOVERY</text>
+          <text x="1604" y="853" font-family="Inter" font-size="9" fill="#1A1A1A">Auto-resume when hub MCP responds again</text>
+        </g>
+
+        <!-- ============ ANIMATED FLOWS ============ -->
+        <!-- Developer ↔ Hub MCP -->
+        <path class="flow-line teal thick" d="M 320 190 Q 380 190, 400 200" marker-end="url(#arrT2)"/>
+        <path class="flow-line teal reverse" d="M 400 220 Q 380 250, 320 250"/>
+
+        <!-- PO ↔ Hub MCP -->
+        <path class="flow-line gold thick" d="M 320 380 Q 380 380, 400 230" marker-end="url(#arrG2)"/>
+        <path class="flow-line gold reverse" d="M 400 240 Q 380 410, 320 410"/>
+
+        <!-- Architect ↔ Hub MCP -->
+        <path class="flow-line" d="M 320 600 Q 380 600, 400 230" marker-end="url(#arrM)"/>
+
+        <!-- Quarterly Refresh → wiki/ -->
+        <path class="flow-line teal" d="M 320 800 Q 380 800, 400 360" marker-end="url(#arrT2)"/>
+
+        <!-- Internal: MCP server → wiki, manifests, cross-repo, scripts -->
+        <path class="static-line dashed" d="M 920 265 L 650 285"/>
+        <path class="static-line dashed" d="M 920 265 L 1180 285"/>
+        <path class="static-line dashed" d="M 920 265 L 650 475"/>
+        <path class="static-line dashed" d="M 920 265 L 1180 475"/>
+        <path class="static-line dashed" d="M 920 265 L 920 655"/>
+
+        <!-- Hub manifests → 35 repos (the sync flow) -->
+        <path class="flow-line red thick" d="M 1440 365 Q 1480 200, 1500 145" marker-end="url(#arrR2)"/>
+        <path class="flow-line red thick" d="M 1440 365 Q 1480 230, 1500 215" marker-end="url(#arrR2)"/>
+        <path class="flow-line red thick" d="M 1440 365 Q 1480 285, 1500 285" marker-end="url(#arrR2)"/>
+        <path class="flow-line red thick" d="M 1440 365 Q 1480 365, 1500 355" marker-end="url(#arrR2)"/>
+        <path class="flow-line red thick" d="M 1440 365 Q 1480 410, 1500 425" marker-end="url(#arrR2)"/>
+
+        <!-- Pulse dots -->
+        <!-- Dev ↔ MCP -->
+        <circle r="4" class="pulse-dot teal">
+          <animateMotion dur="2s" repeatCount="indefinite" path="M 320 190 Q 380 190, 400 200"/>
+        </circle>
+        <circle r="4" class="pulse-dot teal">
+          <animateMotion dur="2s" repeatCount="indefinite" begin="1s" path="M 400 220 Q 380 250, 320 250"/>
+        </circle>
+
+        <!-- PO ↔ MCP -->
+        <circle r="4" class="pulse-dot gold">
+          <animateMotion dur="2.5s" repeatCount="indefinite" begin="0.4s" path="M 320 380 Q 380 380, 400 230"/>
+        </circle>
+        <circle r="4" class="pulse-dot gold">
+          <animateMotion dur="2.5s" repeatCount="indefinite" begin="1.7s" path="M 400 240 Q 380 410, 320 410"/>
+        </circle>
+
+        <!-- Architect → MCP -->
+        <circle r="3.5" class="pulse-dot navy">
+          <animateMotion dur="2.8s" repeatCount="indefinite" begin="0.8s" path="M 320 600 Q 380 600, 400 230"/>
+        </circle>
+
+        <!-- Quarterly refresh → wiki -->
+        <circle r="3.5" class="pulse-dot teal">
+          <animateMotion dur="3s" repeatCount="indefinite" begin="1.2s" path="M 320 800 Q 380 800, 400 360"/>
+        </circle>
+
+        <!-- Hub → 35 Repos (5 parallel sync flows) -->
+        <circle r="4" class="pulse-dot">
+          <animateMotion dur="2.4s" repeatCount="indefinite" begin="0s" path="M 1440 365 Q 1480 200, 1500 145"/>
+        </circle>
+        <circle r="4" class="pulse-dot">
+          <animateMotion dur="2.4s" repeatCount="indefinite" begin="0.5s" path="M 1440 365 Q 1480 230, 1500 215"/>
+        </circle>
+        <circle r="4" class="pulse-dot">
+          <animateMotion dur="2.4s" repeatCount="indefinite" begin="1s" path="M 1440 365 Q 1480 285, 1500 285"/>
+        </circle>
+        <circle r="4" class="pulse-dot">
+          <animateMotion dur="2.4s" repeatCount="indefinite" begin="1.5s" path="M 1440 365 Q 1480 365, 1500 355"/>
+        </circle>
+        <circle r="4" class="pulse-dot">
+          <animateMotion dur="2.4s" repeatCount="indefinite" begin="2s" path="M 1440 365 Q 1480 410, 1500 425"/>
+        </circle>
+      </svg>
+    </div>
+
+    <div class="legend-strip">
+      <div class="legend-item"><div class="legend-line teal"></div><span>Developer / refresh query</span></div>
+      <div class="legend-item"><div class="legend-line gold"></div><span>PO / response</span></div>
+      <div class="legend-item"><div class="legend-line red"></div><span>Hub → repo sync</span></div>
+      <div class="legend-item"><div class="legend-swatch" style="background: #B31E2A;"></div><span>Authoritative source</span></div>
+      <div class="legend-item"><div class="legend-swatch" style="background: white; border: 1.5px solid #D8D2C7;"></div><span>Derived / synced</span></div>
+      <div class="legend-item" style="margin-left: auto;"><span style="font-family: var(--ff-mono); font-size: 0.7rem;">All flows continuous · sync triggers on hub merge</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 9 ============ -->
+<section data-background-color="#FAF6F0">
+  <div class="slide-frame has-sidebar"><div class="slide-main">
+    <div class="eyebrow"><span class="mark">PHASE 02 · SCALE</span><span>09 / 16 · Phase 02 · Files</span></div>
+    <div class="slide-kicker">Hub-and-spoke documentation model</div>
+    <h2 class="slide-title">One central source. Thirty-five synced reflections.</h2>
+
+    <div class="file-grid">
+      <div class="file-col hub">
+        <h3>Central — pathfinder-hub</h3>
+        <div class="file-row auto-reveal" data-delay="1">
+          <div class="file-path">wiki/{repo-name}/*.md</div>
+        </div>
+        <div class="file-row auto-reveal" data-delay="2" style="border-top:none; padding-top:0;">
+          <div class="file-purpose">Curated, enhanced documentation per repo — copied from DeepWiki, augmented for our context</div>
+        </div>
+        <div class="file-row auto-reveal" data-delay="3">
+          <div class="file-path">manifests/{repo-name}.json</div>
+        </div>
+        <div class="file-row auto-reveal" data-delay="4" style="border-top:none; padding-top:0;">
+          <div class="file-purpose">Authoritative architecture manifests — single source of truth for cross-repo metadata</div>
+        </div>
+        <div class="file-row auto-reveal" data-delay="5">
+          <div class="file-path">cross-repo/dependency-map.md</div>
+        </div>
+        <div class="file-row auto-reveal" data-delay="6" style="border-top:none; padding-top:0;">
+          <div class="file-purpose">Inter-repo dependency graph + shared component registry + API index + domain glossary</div>
+        </div>
+        <div class="file-row auto-reveal" data-delay="7">
+          <div class="file-path">mcp-server/server.py</div>
+        </div>
+        <div class="file-row auto-reveal" data-delay="8" style="border-top:none; padding-top:0;">
+          <div class="file-purpose">FastAPI MCP server exposing 6 tools: find_repos · get_context · impact_analysis · enhance_story · search_wiki · cross_repo_dependencies</div>
+        </div>
+      </div>
+
+      <div class="file-col">
+        <h3>Per-Repo — Synced Reflections</h3>
+        <div class="file-row auto-reveal" data-delay="9">
+          <div class="file-path">.github/architecture-manifest.json</div>
+        </div>
+        <div class="file-row auto-reveal" data-delay="10" style="border-top:none; padding-top:0;">
+          <div class="file-purpose">Derived copy from hub. Used by agents as fallback when MCP server unreachable.</div>
+        </div>
+        <div class="file-row auto-reveal" data-delay="10">
+          <div class="file-path">.github/agents/*.agent.md</div>
+        </div>
+        <div class="file-row auto-reveal" data-delay="10" style="border-top:none; padding-top:0;">
+          <div class="file-purpose">Updated to use pathfinder-hub MCP tools instead of DeepWiki MCP. Otherwise unchanged from Phase 1.</div>
+        </div>
+        <div class="file-row auto-reveal" data-delay="10">
+          <div class="file-path">.vscode/mcp.json</div>
+        </div>
+        <div class="file-row auto-reveal" data-delay="10" style="border-top:none; padding-top:0;">
+          <div class="file-purpose">Points to self-hosted pathfinder-hub MCP endpoint. JIRA MCP unchanged.</div>
+        </div>
+        <div style="margin-top: 20px; padding: 16px; background: white; border-left: 3px solid var(--accent-gold); font-size: 0.82rem; color: var(--charcoal);" class="auto-reveal" data-delay="10">
+          <strong style="font-family: var(--ff-body); font-weight: 600;">Sync mechanism:</strong><br/>
+          GitHub Action in pathfinder-hub opens PRs to all 35 repos when manifests change. Repos never edit their local copies — single direction of trust.
+        </div>
+      </div>
+    </div>
+
+    <div class="accent-bar phase-2"></div>
+  </div><div class="quick-facts">
+      <div class="qf-label auto-reveal" data-delay="1">Scale</div>
+      <div class="qf-item auto-reveal" data-delay="1">
+        <div class="qf-key">Manifests (hub)</div>
+        <div class="qf-num gold">35</div>
+        <div class="qf-detail">Authoritative source</div>
+      </div><div class="qf-item auto-reveal" data-delay="2">
+        <div class="qf-key">Synced copies</div>
+        <div class="qf-num">35</div>
+        <div class="qf-detail">Auto-PR'd into each repo</div>
+      </div><div class="qf-item auto-reveal" data-delay="3">
+        <div class="qf-key">MCP tools</div>
+        <div class="qf-num gold">6</div>
+        <div class="qf-detail">Story · context · impact · enhance · search · deps</div>
+      </div><div class="qf-item auto-reveal" data-delay="4">
+        <div class="qf-key">Direction of trust</div>
+        <div class="qf-num">1-way</div>
+        <div class="qf-detail">Hub → repos only</div>
+      </div>
+    </div></div></section>
+
+<!-- ============ SLIDE 10 ============ -->
+<section data-background-color="#FAF6F0">
+  <div class="detail-slide">
+    <div class="caption-strip">
+      <div class="phase-mark">
+        <div class="phase-num">03</div>
+        <div class="phase-info">
+          <div class="phase-tag">Phase Three · Deepen</div>
+          <div class="phase-name">Graph Intelligence Platform</div>
+        </div>
+      </div>
+      <div class="phase-desc">SCIP indexers in GitHub Actions emit code-symbol graphs on every merge. ArcadeDB stores symbols, files, calls, references, and MongoDB collections. Enables blast-radius, dangling-reference, and drift queries. Branch-aware: PO sees main, devs see release/*.</div>
+      <div class="phase-meta">
+        <div class="meta-label">Duration · Cost · Scope</div>
+        <div class="meta-value">8 weeks · ~$200/mo · all 35 repos</div>
+      </div>
+    </div>
+
+    <div class="diagram-canvas">
+      <svg viewBox="0 0 1920 920" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <marker id="arrR3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="#B31E2A"/>
+          </marker>
+          <marker id="arrG3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="#F2A900"/>
+          </marker>
+          <marker id="arrT3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="#1F6F6F"/>
+          </marker>
+          <marker id="arrN3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="#0F1B2D"/>
+          </marker>
+        </defs>
+
+        <!-- Headers -->
+        <text x="60" y="40" font-family="Inter" font-size="11" font-weight="700" fill="#6B6B6B" letter-spacing="2.4">SOURCE OF EVENTS</text>
+        <text x="540" y="40" font-family="Inter" font-size="11" font-weight="700" fill="#6B6B6B" letter-spacing="2.4">INDEXING PIPELINE</text>
+        <text x="990" y="40" font-family="Inter" font-size="11" font-weight="700" fill="#6B6B6B" letter-spacing="2.4">PATHFINDER INTELLIGENCE SERVER</text>
+        <text x="1620" y="40" font-family="Inter" font-size="11" font-weight="700" fill="#6B6B6B" letter-spacing="2.4">CONSUMERS</text>
+        <line x1="40" y1="55" x2="1880" y2="55" stroke="#D8D2C7" stroke-width="1"/>
+
+        <!-- ===== SOURCE: 35 REPOS WITH CI ===== -->
+        <g>
+          <rect x="40" y="80" width="420" height="780" rx="4" fill="none" stroke="#D8D2C7" stroke-width="1" stroke-dasharray="4 4"/>
+          <text x="56" y="103" font-family="Inter" font-size="10" font-weight="700" fill="#6B6B6B" letter-spacing="1.5">35 POLYREPOS · GITHUB ACTIONS · GITFLOW</text>
+
+          <!-- React MFE Sample -->
+          <g>
+            <rect x="60" y="120" width="380" height="220" rx="3" fill="white" stroke="#1F6F6F" stroke-width="2"/>
+            <rect x="60" y="120" width="380" height="32" fill="#1F6F6F"/>
+            <text x="76" y="141" font-family="Inter" font-size="12" font-weight="600" fill="#FAF6F0">React MFE Repo · 30 instances</text>
+
+            <text x="76" y="172" font-family="Inter" font-size="11" font-weight="600" fill="#1A1A1A">Branches indexed:</text>
+            <text x="76" y="190" font-family="JetBrains Mono" font-size="10" fill="#B31E2A">main</text>
+            <text x="180" y="190" font-family="Inter" font-size="10" fill="#6B6B6B">→ PO-facing graph</text>
+            <text x="76" y="208" font-family="JetBrains Mono" font-size="10" fill="#B31E2A">release/*</text>
+            <text x="180" y="208" font-family="Inter" font-size="10" fill="#6B6B6B">→ developer-facing graph</text>
+            <text x="76" y="226" font-family="JetBrains Mono" font-size="10" fill="#B31E2A">develop</text>
+            <text x="180" y="226" font-family="Inter" font-size="10" fill="#6B6B6B">→ latest integration state</text>
+
+            <line x1="76" y1="240" x2="424" y2="240" stroke="#D8D2C7"/>
+            <text x="76" y="258" font-family="Inter" font-size="10" font-weight="600" fill="#1A1A1A">On merge, GHA runs:</text>
+            <text x="76" y="278" font-family="JetBrains Mono" font-size="10" fill="#B31E2A">.github/workflows/pathfinder-index.yml</text>
+
+            <text x="76" y="300" font-family="Inter" font-size="10" fill="#6B6B6B">▸ npm ci  (resolves all imports + types)</text>
+            <text x="76" y="316" font-family="Inter" font-size="10" fill="#6B6B6B">▸ npx scip-typescript index --project-name=$REPO</text>
+            <text x="76" y="332" font-family="Inter" font-size="10" fill="#6B6B6B">▸ Upload index.scip → ingestion API</text>
+          </g>
+
+          <!-- Spring Boot Sample -->
+          <g>
+            <rect x="60" y="360" width="380" height="220" rx="3" fill="white" stroke="#1F6F6F" stroke-width="2"/>
+            <rect x="60" y="360" width="380" height="32" fill="#1F6F6F"/>
+            <text x="76" y="381" font-family="Inter" font-size="12" font-weight="600" fill="#FAF6F0">Java Spring Boot Repo · 5 instances</text>
+
+            <text x="76" y="412" font-family="Inter" font-size="11" font-weight="600" fill="#1A1A1A">On merge, GHA runs:</text>
+            <text x="76" y="432" font-family="JetBrains Mono" font-size="10" fill="#B31E2A">.github/workflows/pathfinder-index.yml</text>
+
+            <text x="76" y="454" font-family="Inter" font-size="10" fill="#6B6B6B">▸ ./gradlew compileJava -Dsemanticdb.enabled</text>
+            <text x="76" y="470" font-family="Inter" font-size="10" fill="#6B6B6B">▸ scip-java index --build-tool=gradle</text>
+            <text x="76" y="486" font-family="Inter" font-size="10" fill="#6B6B6B">▸ Upload index.scip → ingestion API</text>
+
+            <line x1="76" y1="500" x2="424" y2="500" stroke="#D8D2C7"/>
+            <text x="76" y="518" font-family="Inter" font-size="11" font-weight="600" fill="#1A1A1A">Resolves with compiler accuracy:</text>
+            <text x="76" y="536" font-family="Inter" font-size="10" fill="#6B6B6B">▸ Spring @Autowired bindings</text>
+            <text x="76" y="552" font-family="Inter" font-size="10" fill="#6B6B6B">▸ @Document → MongoCollection mappings</text>
+            <text x="76" y="568" font-family="Inter" font-size="10" fill="#6B6B6B">▸ Cross-package interface implementations</text>
+          </g>
+
+          <!-- Frequency / load -->
+          <g>
+            <rect x="60" y="600" width="380" height="100" rx="3" fill="#0F1B2D"/>
+            <rect x="60" y="600" width="380" height="28" fill="#1A2942"/>
+            <text x="76" y="619" font-family="Inter" font-size="11" font-weight="600" fill="#FAF6F0">INDEX VOLUME</text>
+
+            <text x="76" y="648" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">▸ Expected merges: ~50–100/day across 35 repos</text>
+            <text x="76" y="666" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">▸ Index size: 5–50 MB per repo per branch</text>
+            <text x="76" y="684" font-family="Inter" font-size="10" fill="rgba(250,246,240,0.85)">▸ CI overhead: +30–60s (TS) · +45–90s (Java)</text>
+          </g>
+
+          <!-- Index file artifact -->
+          <g>
+            <rect x="60" y="720" width="380" height="120" rx="3" fill="white" stroke="#B31E2A" stroke-width="2"/>
+            <rect x="60" y="720" width="380" height="28" fill="#B31E2A"/>
+            <text x="76" y="739" font-family="Inter" font-size="11" font-weight="600" fill="#FAF6F0">UPLOAD ARTIFACT · index.scip</text>
+
+            <text x="76" y="765" font-family="JetBrains Mono" font-size="10" fill="#1A1A1A">POST /api/index</text>
+            <text x="76" y="783" font-family="JetBrains Mono" font-size="9" fill="#6B6B6B">  repo=mfe-checkout</text>
+            <text x="76" y="797" font-family="JetBrains Mono" font-size="9" fill="#6B6B6B">  branch=release/2.5</text>
+            <text x="76" y="811" font-family="JetBrains Mono" font-size="9" fill="#6B6B6B">  commit=a1b2c3d</text>
+            <text x="76" y="825" font-family="JetBrains Mono" font-size="9" fill="#6B6B6B">  file=@index.scip  (binary Protobuf)</text>
+          </g>
+        </g>
+
+        <!-- ===== INDEXING PIPELINE (center-left) ===== -->
+        <g>
+          <rect x="500" y="80" width="420" height="780" rx="4" fill="none" stroke="#D8D2C7" stroke-width="1" stroke-dasharray="4 4"/>
+          <text x="516" y="103" font-family="Inter" font-size="10" font-weight="700" fill="#6B6B6B" letter-spacing="1.5">INGESTION PIPELINE · sequential, atomic per repo</text>
+
+          <!-- Stage 1 -->
+          <g>
+            <rect x="520" y="120" width="380" height="130" rx="3" fill="white" stroke="#F2A900" stroke-width="2"/>
+            <rect x="520" y="120" width="380" height="28" fill="#F2A900"/>
+            <text x="536" y="139" font-family="Inter" font-size="11" font-weight="600" fill="#1A1A1A">STAGE 1 · Ingestion API</text>
+
+            <text x="536" y="166" font-family="JetBrains Mono" font-size="10" fill="#B31E2A">FastAPI · /api/index endpoint</text>
+            <text x="536" y="188" font-family="Inter" font-size="10" fill="#1A1A1A">▸ Validates SCIP protobuf integrity</text>
+            <text x="536" y="206" font-family="Inter" font-size="10" fill="#1A1A1A">▸ Authenticates GH Actions token</text>
+            <text x="536" y="224" font-family="Inter" font-size="10" fill="#1A1A1A">▸ Enqueues for processing</text>
+            <text x="536" y="242" font-family="JetBrains Mono" font-size="9" fill="#6B6B6B">~50ms · returns 202 Accepted</text>
+          </g>
+
+          <!-- Stage 2 -->
+          <g>
+            <rect x="520" y="270" width="380" height="130" rx="3" fill="white" stroke="#F2A900" stroke-width="2"/>
+            <rect x="520" y="270" width="380" height="28" fill="#F2A900"/>
+            <text x="536" y="289" font-family="Inter" font-size="11" font-weight="600" fill="#1A1A1A">STAGE 2 · Branch-Aware Router</text>
+
+            <text x="536" y="318" font-family="Inter" font-size="10" fill="#1A1A1A">Routes index to correct graph partition:</text>
+            <text x="536" y="338" font-family="JetBrains Mono" font-size="10" fill="#B31E2A">main</text>
+            <text x="620" y="338" font-family="Inter" font-size="10" fill="#6B6B6B">→ PO-facing graph (production truth)</text>
+            <text x="536" y="356" font-family="JetBrains Mono" font-size="10" fill="#B31E2A">release/*</text>
+            <text x="620" y="356" font-family="Inter" font-size="10" fill="#6B6B6B">→ dev-facing graph (in-flight)</text>
+            <text x="536" y="374" font-family="JetBrains Mono" font-size="10" fill="#B31E2A">develop</text>
+            <text x="620" y="374" font-family="Inter" font-size="10" fill="#6B6B6B">→ integration graph</text>
+          </g>
+
+          <!-- Stage 3 -->
+          <g>
+            <rect x="520" y="420" width="380" height="190" rx="3" fill="white" stroke="#F2A900" stroke-width="2"/>
+            <rect x="520" y="420" width="380" height="28" fill="#F2A900"/>
+            <text x="536" y="439" font-family="Inter" font-size="11" font-weight="600" fill="#1A1A1A">STAGE 3 · Index Worker (atomic per repo)</text>
+
+            <text x="536" y="466" font-family="Inter" font-size="10" font-weight="600" fill="#1A1A1A">Python worker, parses SCIP protobuf:</text>
+
+            <text x="536" y="488" font-family="JetBrains Mono" font-size="9" fill="#B31E2A">BEGIN TRANSACTION</text>
+            <text x="536" y="503" font-family="JetBrains Mono" font-size="9" fill="#6B6B6B">  DELETE symbols WHERE repo=$R AND branch=$B</text>
+            <text x="536" y="518" font-family="JetBrains Mono" font-size="9" fill="#6B6B6B">  PARSE scip.proto → symbols, refs, calls</text>
+            <text x="536" y="533" font-family="JetBrains Mono" font-size="9" fill="#6B6B6B">  INSERT Symbol/File/MongoCollection nodes</text>
+            <text x="536" y="548" font-family="JetBrains Mono" font-size="9" fill="#6B6B6B">  INSERT DEFINED_IN/REFERENCES/CALLS edges</text>
+            <text x="536" y="563" font-family="JetBrains Mono" font-size="9" fill="#6B6B6B">  UPDATE meta.last_indexed_at = NOW()</text>
+            <text x="536" y="578" font-family="JetBrains Mono" font-size="9" fill="#B31E2A">COMMIT</text>
+
+            <text x="536" y="600" font-family="Inter" font-size="9" fill="#6B6B6B">~10–30s per index · concurrent across repos</text>
+          </g>
+
+          <!-- Stage 4 -->
+          <g>
+            <rect x="520" y="630" width="380" height="210" rx="3" fill="white" stroke="#F2A900" stroke-width="2"/>
+            <rect x="520" y="630" width="380" height="28" fill="#F2A900"/>
+            <text x="536" y="649" font-family="Inter" font-size="11" font-weight="600" fill="#1A1A1A">STAGE 4 · Cross-Repo Consistency Checker</text>
+
+            <text x="536" y="676" font-family="Inter" font-size="10" font-weight="600" fill="#1A1A1A">Runs after every successful repo update:</text>
+
+            <text x="536" y="698" font-family="Inter" font-size="10" fill="#1A1A1A">▸ Dangling references</text>
+            <text x="536" y="714" font-family="Inter" font-size="9" fill="#6B6B6B">    Other repos reference deleted symbols here</text>
+
+            <text x="536" y="734" font-family="Inter" font-size="10" fill="#1A1A1A">▸ Broken imports</text>
+            <text x="536" y="750" font-family="Inter" font-size="9" fill="#6B6B6B">    File paths no longer resolve cross-repo</text>
+
+            <text x="536" y="770" font-family="Inter" font-size="10" fill="#1A1A1A">▸ API contract drift</text>
+            <text x="536" y="786" font-family="Inter" font-size="9" fill="#6B6B6B">    Spring controller signature changed but MFE still calls old</text>
+
+            <text x="536" y="806" font-family="Inter" font-size="10" fill="#1A1A1A">▸ Stored as Warning nodes for query</text>
+            <text x="536" y="822" font-family="Inter" font-size="9" fill="#6B6B6B">    + optional Slack alert via webhook</text>
+          </g>
+        </g>
+
+        <!-- ===== ARCADEDB GRAPH (center) ===== -->
+        <g>
+          <rect x="960" y="80" width="640" height="780" rx="4" fill="white" stroke="#B31E2A" stroke-width="3"/>
+          <rect x="960" y="80" width="640" height="44" fill="#B31E2A"/>
+          <text x="980" y="108" font-family="Fraunces" font-size="16" font-weight="500" fill="#FAF6F0">ArcadeDB · Graph + Document + Vector</text>
+          <text x="1584" y="108" text-anchor="end" font-family="JetBrains Mono" font-size="10" fill="rgba(250,246,240,0.8)">Apache 2.0 · java -jar · no Docker</text>
+
+          <!-- Schema header -->
+          <text x="980" y="148" font-family="Inter" font-size="11" font-weight="700" fill="#1A1A1A" letter-spacing="1.5">SCHEMA · NODES</text>
+
+          <!-- Symbol node -->
+          <g>
+            <rect x="980" y="158" width="195" height="100" rx="3" fill="#FAF6F0" stroke="#0F1B2D" stroke-width="1.5"/>
+            <text x="990" y="176" font-family="Inter" font-size="11" font-weight="600" fill="#0F1B2D">Symbol</text>
+            <text x="990" y="194" font-family="JetBrains Mono" font-size="9" fill="#1A1A1A">name, kind, filePath</text>
+            <text x="990" y="208" font-family="JetBrains Mono" font-size="9" fill="#1A1A1A">repo, branch, commitSha</text>
+            <text x="990" y="222" font-family="JetBrains Mono" font-size="9" fill="#1A1A1A">startLine, endLine</text>
+            <text x="990" y="236" font-family="JetBrains Mono" font-size="9" fill="#1A1A1A">indexedAt</text>
+            <text x="990" y="252" font-family="Inter" font-size="9" fill="#6B6B6B" font-style="italic">~500K nodes total</text>
+          </g>
+
+          <!-- File node -->
+          <g>
+            <rect x="1185" y="158" width="195" height="100" rx="3" fill="#FAF6F0" stroke="#0F1B2D" stroke-width="1.5"/>
+            <text x="1195" y="176" font-family="Inter" font-size="11" font-weight="600" fill="#0F1B2D">File</text>
+            <text x="1195" y="194" font-family="JetBrains Mono" font-size="9" fill="#1A1A1A">path, repo, branch</text>
+            <text x="1195" y="208" font-family="JetBrains Mono" font-size="9" fill="#1A1A1A">language</text>
+            <text x="1195" y="222" font-family="JetBrains Mono" font-size="9" fill="#1A1A1A">commitSha</text>
+            <text x="1195" y="252" font-family="Inter" font-size="9" fill="#6B6B6B" font-style="italic">~80K nodes total</text>
+          </g>
+
+          <!-- MongoCollection node -->
+          <g>
+            <rect x="1390" y="158" width="200" height="100" rx="3" fill="#FAF6F0" stroke="#0F1B2D" stroke-width="1.5"/>
+            <text x="1400" y="176" font-family="Inter" font-size="11" font-weight="600" fill="#0F1B2D">MongoCollection</text>
+            <text x="1400" y="194" font-family="JetBrains Mono" font-size="9" fill="#1A1A1A">name, repo</text>
+            <text x="1400" y="208" font-family="JetBrains Mono" font-size="9" fill="#1A1A1A">documentClass</text>
+            <text x="1400" y="222" font-family="JetBrains Mono" font-size="9" fill="#1A1A1A">indexes[]</text>
+            <text x="1400" y="252" font-family="Inter" font-size="9" fill="#6B6B6B" font-style="italic">From @Document scan</text>
+          </g>
+
+          <!-- Edges header -->
+          <text x="980" y="290" font-family="Inter" font-size="11" font-weight="700" fill="#1A1A1A" letter-spacing="1.5">SCHEMA · EDGES</text>
+
+          <g font-family="JetBrains Mono" font-size="10">
+            <rect x="980" y="300" width="195" height="38" rx="2" fill="white" stroke="#D8D2C7"/>
+            <text x="990" y="316" font-weight="600" fill="#B31E2A">DEFINED_IN</text>
+            <text x="990" y="330" font-size="8" fill="#6B6B6B">Symbol → File</text>
+
+            <rect x="1185" y="300" width="195" height="38" rx="2" fill="white" stroke="#D8D2C7"/>
+            <text x="1195" y="316" font-weight="600" fill="#B31E2A">REFERENCES</text>
+            <text x="1195" y="330" font-size="8" fill="#6B6B6B">Symbol → Symbol</text>
+
+            <rect x="1390" y="300" width="200" height="38" rx="2" fill="white" stroke="#D8D2C7"/>
+            <text x="1400" y="316" font-weight="600" fill="#B31E2A">CALLS</text>
+            <text x="1400" y="330" font-size="8" fill="#6B6B6B">Symbol → Symbol</text>
+
+            <rect x="980" y="346" width="195" height="38" rx="2" fill="white" stroke="#D8D2C7"/>
+            <text x="990" y="362" font-weight="600" fill="#B31E2A">IMPORTS</text>
+            <text x="990" y="376" font-size="8" fill="#6B6B6B">File → File</text>
+
+            <rect x="1185" y="346" width="195" height="38" rx="2" fill="white" stroke="#D8D2C7"/>
+            <text x="1195" y="362" font-weight="600" fill="#B31E2A">QUERIES_COLLECTION</text>
+            <text x="1195" y="376" font-size="8" fill="#6B6B6B">Symbol → MongoCollection</text>
+
+            <rect x="1390" y="346" width="200" height="38" rx="2" fill="white" stroke="#D8D2C7"/>
+            <text x="1400" y="362" font-weight="600" fill="#F2A900">DANGLING_REF (warning)</text>
+            <text x="1400" y="376" font-size="8" fill="#6B6B6B">stored after consistency check</text>
+          </g>
+
+          <!-- Mini graph visualization -->
+          <text x="980" y="412" font-family="Inter" font-size="11" font-weight="700" fill="#1A1A1A" letter-spacing="1.5">EXAMPLE SUBGRAPH</text>
+          <g>
+            <rect x="980" y="422" width="610" height="180" rx="3" fill="#FAF6F0" stroke="#D8D2C7"/>
+
+            <!-- Nodes -->
+            <circle cx="1050" cy="510" r="30" fill="white" stroke="#1F6F6F" stroke-width="2"/>
+            <text x="1050" y="507" text-anchor="middle" font-family="Inter" font-size="9" font-weight="600" fill="#1A1A1A">useAuth</text>
+            <text x="1050" y="519" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#6B6B6B">hook</text>
+
+            <circle cx="1200" cy="450" r="26" fill="white" stroke="#B31E2A" stroke-width="2"/>
+            <text x="1200" y="448" text-anchor="middle" font-family="Inter" font-size="9" font-weight="600" fill="#1A1A1A">LoginForm</text>
+            <text x="1200" y="460" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#6B6B6B">component</text>
+
+            <circle cx="1200" cy="570" r="26" fill="white" stroke="#B31E2A" stroke-width="2"/>
+            <text x="1200" y="568" text-anchor="middle" font-family="Inter" font-size="9" font-weight="600" fill="#1A1A1A">UserMenu</text>
+            <text x="1200" y="580" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#6B6B6B">component</text>
+
+            <circle cx="1350" cy="510" r="28" fill="white" stroke="#F2A900" stroke-width="2"/>
+            <text x="1350" y="508" text-anchor="middle" font-family="Inter" font-size="9" font-weight="600" fill="#1A1A1A">AuthService</text>
+            <text x="1350" y="520" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#6B6B6B">class</text>
+
+            <rect x="1480" y="490" width="80" height="40" rx="3" fill="white" stroke="#0F1B2D" stroke-width="1.5"/>
+            <text x="1520" y="507" text-anchor="middle" font-family="Inter" font-size="9" font-weight="600" fill="#0F1B2D">users</text>
+            <text x="1520" y="520" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#6B6B6B">collection</text>
+
+            <!-- Edges -->
+            <line x1="1080" y1="500" x2="1174" y2="460" stroke="#6B6B6B" stroke-width="1" marker-end="url(#arrN3)"/>
+            <text x="1110" y="475" font-family="JetBrains Mono" font-size="7" fill="#6B6B6B">CALLS</text>
+            <line x1="1080" y1="520" x2="1174" y2="560" stroke="#6B6B6B" stroke-width="1" marker-end="url(#arrN3)"/>
+            <text x="1110" y="555" font-family="JetBrains Mono" font-size="7" fill="#6B6B6B">CALLS</text>
+            <line x1="1080" y1="510" x2="1324" y2="510" stroke="#6B6B6B" stroke-width="1" marker-end="url(#arrN3)"/>
+            <text x="1180" y="503" font-family="JetBrains Mono" font-size="7" fill="#6B6B6B">REFERENCES</text>
+            <line x1="1378" y1="510" x2="1478" y2="510" stroke="#6B6B6B" stroke-width="1" marker-end="url(#arrN3)"/>
+            <text x="1400" y="503" font-family="JetBrains Mono" font-size="7" fill="#6B6B6B">QUERIES</text>
+
+            <text x="985" y="436" font-family="Inter" font-size="9" fill="#6B6B6B" font-style="italic">Query: blast_radius('useAuth') → returns LoginForm, UserMenu, AuthService, users</text>
+          </g>
+
+          <!-- MCP Server with graph tools -->
+          <g>
+            <rect x="980" y="620" width="610" height="220" rx="3" fill="#B31E2A" stroke="#8A1620" stroke-width="2"/>
+            <rect x="980" y="620" width="610" height="32" fill="#8A1620"/>
+            <text x="996" y="641" font-family="Inter" font-size="12" font-weight="600" fill="#FAF6F0">MCP Server · graph_tools.py + wiki_tools.py (Phase 2)</text>
+            <text x="1574" y="641" text-anchor="end" font-family="JetBrains Mono" font-size="9" fill="rgba(250,246,240,0.7)">stdio + SSE</text>
+
+            <text x="996" y="670" font-family="Inter" font-size="11" font-weight="600" fill="#FAF6F0">NEW · Graph-backed tools (Phase 3)</text>
+
+            <g font-family="JetBrains Mono" font-size="10" fill="#F2A900">
+              <text x="996" y="694">symbol_lookup(name, kind?)</text>
+              <text x="996" y="710">blast_radius(symbol)</text>
+              <text x="996" y="726">consistency_check(repo?, branch?)</text>
+              <text x="1300" y="694">collection_usage(coll_name)</text>
+              <text x="1300" y="710">recent_changes(repo, since)</text>
+              <text x="1300" y="726">find_pattern(ast_pattern)</text>
+            </g>
+
+            <text x="1280" y="694" font-family="Inter" font-size="9" fill="rgba(250,246,240,0.75)">defs+refs</text>
+            <text x="1280" y="710" font-family="Inter" font-size="9" fill="rgba(250,246,240,0.75)">impact</text>
+            <text x="1280" y="726" font-family="Inter" font-size="9" fill="rgba(250,246,240,0.75)">drift</text>
+            <text x="1530" y="694" font-family="Inter" font-size="9" fill="rgba(250,246,240,0.75)">db scope</text>
+            <text x="1530" y="710" font-family="Inter" font-size="9" fill="rgba(250,246,240,0.75)">diff</text>
+            <text x="1530" y="726" font-family="Inter" font-size="9" fill="rgba(250,246,240,0.75)">structural</text>
+
+            <line x1="996" y1="744" x2="1574" y2="744" stroke="rgba(250,246,240,0.3)"/>
+
+            <text x="996" y="764" font-family="Inter" font-size="10" font-weight="600" fill="#FAF6F0">RETAINED · Phase 2 wiki/manifest tools</text>
+            <text x="996" y="782" font-family="JetBrains Mono" font-size="9" fill="rgba(250,246,240,0.7)">find_repos_for_story · get_repo_context · impact_analysis</text>
+            <text x="996" y="798" font-family="JetBrains Mono" font-size="9" fill="rgba(250,246,240,0.7)">enhance_story · search_wiki · cross_repo_dependencies</text>
+
+            <text x="996" y="822" font-family="Inter" font-size="9" font-weight="600" fill="#F2A900" letter-spacing="1">QUERY LANGUAGE</text>
+            <text x="1112" y="822" font-family="Inter" font-size="9" fill="rgba(250,246,240,0.85)">OpenCypher · same syntax as Neo4j/KuzuDB</text>
+          </g>
+        </g>
+
+        <!-- ===== CONSUMERS (right) ===== -->
+        <g>
+          <rect x="1640" y="80" width="240" height="780" rx="4" fill="none" stroke="#D8D2C7" stroke-width="1" stroke-dasharray="4 4"/>
+          <text x="1656" y="103" font-family="Inter" font-size="10" font-weight="700" fill="#6B6B6B" letter-spacing="1.5">QUERY CONSUMERS</text>
+
+          <!-- VSCode Copilot Agents -->
+          <g>
+            <rect x="1660" y="120" width="200" height="190" rx="3" fill="white" stroke="#1F6F6F" stroke-width="2"/>
+            <rect x="1660" y="120" width="200" height="32" fill="#1F6F6F"/>
+            <text x="1676" y="141" font-family="Inter" font-size="11" font-weight="600" fill="#FAF6F0">VSCode Copilot</text>
+
+            <text x="1676" y="170" font-family="Inter" font-size="10" font-weight="600" fill="#1A1A1A">Branch filter:</text>
+            <text x="1676" y="186" font-family="JetBrains Mono" font-size="10" fill="#1F6F6F">release/* → main</text>
+
+            <text x="1676" y="210" font-family="Inter" font-size="10" fill="#1A1A1A">Usage:</text>
+            <text x="1676" y="226" font-family="Inter" font-size="9" fill="#6B6B6B">▸ Story analysis</text>
+            <text x="1676" y="240" font-family="Inter" font-size="9" fill="#6B6B6B">▸ Refactor blast radius</text>
+            <text x="1676" y="254" font-family="Inter" font-size="9" fill="#6B6B6B">▸ Find callers</text>
+            <text x="1676" y="268" font-family="Inter" font-size="9" fill="#6B6B6B">▸ Pre-PR consistency</text>
+
+            <line x1="1676" y1="282" x2="1844" y2="282" stroke="#D8D2C7"/>
+            <text x="1676" y="298" font-family="JetBrains Mono" font-size="9" fill="#B31E2A">stdio transport</text>
+          </g>
+
+          <!-- PO Dashboard -->
+          <g>
+            <rect x="1660" y="330" width="200" height="190" rx="3" fill="white" stroke="#F2A900" stroke-width="2"/>
+            <rect x="1660" y="330" width="200" height="32" fill="#F2A900"/>
+            <text x="1676" y="351" font-family="Inter" font-size="11" font-weight="600" fill="#1A1A1A">JIRA + Dashboard</text>
+
+            <text x="1676" y="380" font-family="Inter" font-size="10" font-weight="600" fill="#1A1A1A">Branch filter:</text>
+            <text x="1676" y="396" font-family="JetBrains Mono" font-size="10" fill="#C58800">main only</text>
+
+            <text x="1676" y="420" font-family="Inter" font-size="10" fill="#1A1A1A">Usage:</text>
+            <text x="1676" y="436" font-family="Inter" font-size="9" fill="#6B6B6B">▸ Story enhancement</text>
+            <text x="1676" y="450" font-family="Inter" font-size="9" fill="#6B6B6B">▸ Impact dashboard</text>
+            <text x="1676" y="464" font-family="Inter" font-size="9" fill="#6B6B6B">▸ Domain queries</text>
+            <text x="1676" y="478" font-family="Inter" font-size="9" fill="#6B6B6B">▸ Cross-team viz</text>
+
+            <line x1="1676" y1="492" x2="1844" y2="492" stroke="#D8D2C7"/>
+            <text x="1676" y="508" font-family="JetBrains Mono" font-size="9" fill="#C58800">SSE transport</text>
+          </g>
+
+          <!-- Architect / Drift Alerts -->
+          <g>
+            <rect x="1660" y="540" width="200" height="190" rx="3" fill="white" stroke="#0F1B2D" stroke-width="2"/>
+            <rect x="1660" y="540" width="200" height="32" fill="#0F1B2D"/>
+            <text x="1676" y="561" font-family="Inter" font-size="11" font-weight="600" fill="#FAF6F0">Architect Alerts</text>
+
+            <text x="1676" y="590" font-family="Inter" font-size="10" font-weight="600" fill="#1A1A1A">Slack webhook:</text>
+            <text x="1676" y="606" font-family="Inter" font-size="9" fill="#6B6B6B">Auto-fires on:</text>
+            <text x="1676" y="622" font-family="Inter" font-size="9" fill="#6B6B6B">▸ New dangling refs</text>
+            <text x="1676" y="636" font-family="Inter" font-size="9" fill="#6B6B6B">▸ API contract drift</text>
+            <text x="1676" y="650" font-family="Inter" font-size="9" fill="#6B6B6B">▸ Shared comp changes</text>
+            <text x="1676" y="664" font-family="Inter" font-size="9" fill="#6B6B6B">▸ MongoCollection</text>
+            <text x="1686" y="678" font-family="Inter" font-size="9" fill="#6B6B6B">schema changes</text>
+
+            <line x1="1676" y1="694" x2="1844" y2="694" stroke="#D8D2C7"/>
+            <text x="1676" y="710" font-family="JetBrains Mono" font-size="9" fill="#0F1B2D">push notifications</text>
+          </g>
+
+          <!-- Staleness/Latency -->
+          <g>
+            <rect x="1660" y="750" width="200" height="100" rx="3" fill="#0F1B2D"/>
+            <text x="1676" y="772" font-family="Inter" font-size="10" font-weight="600" fill="#F2A900" letter-spacing="1">LATENCY BUDGET</text>
+            <text x="1676" y="794" font-family="Inter" font-size="9" fill="rgba(250,246,240,0.85)">Merge → graph: ~1–2 min</text>
+            <text x="1676" y="810" font-family="Inter" font-size="9" fill="rgba(250,246,240,0.85)">Query response: &lt;500ms</text>
+            <text x="1676" y="826" font-family="Inter" font-size="9" fill="rgba(250,246,240,0.85)">Backup: nightly snapshot</text>
+            <text x="1676" y="842" font-family="Inter" font-size="9" fill="rgba(250,246,240,0.85)">Retention: 30 days .scip</text>
+          </g>
+        </g>
+
+        <!-- ===== ANIMATED FLOWS ===== -->
+        <!-- Repos → Ingestion (multiple parallel) -->
+        <path class="flow-line red thick" d="M 440 230 Q 480 230, 520 185" marker-end="url(#arrR3)"/>
+        <path class="flow-line red thick" d="M 440 470 Q 480 470, 520 200" marker-end="url(#arrR3)"/>
+        <path class="flow-line red thick" d="M 440 770 Q 480 770, 520 220" marker-end="url(#arrR3)"/>
+
+        <!-- Ingestion → Router -->
+        <path class="flow-line red" d="M 710 250 L 710 270" marker-end="url(#arrR3)"/>
+        <!-- Router → Worker -->
+        <path class="flow-line red" d="M 710 400 L 710 420" marker-end="url(#arrR3)"/>
+        <!-- Worker → Consistency -->
+        <path class="flow-line red" d="M 710 610 L 710 630" marker-end="url(#arrR3)"/>
+
+        <!-- Worker → ArcadeDB (writes) -->
+        <path class="flow-line red thick" d="M 900 510 Q 935 510, 960 470" marker-end="url(#arrR3)"/>
+
+        <!-- Consistency → ArcadeDB (warnings) -->
+        <path class="flow-line gold" d="M 900 720 Q 935 720, 960 700" marker-end="url(#arrG3)"/>
+
+        <!-- ArcadeDB ↔ MCP Server (internal) -->
+        <path class="static-line dashed" d="M 1280 605 L 1280 620"/>
+
+        <!-- MCP → Consumers -->
+        <path class="flow-line teal thick" d="M 1600 690 Q 1620 690, 1660 215" marker-end="url(#arrT3)"/>
+        <path class="flow-line gold thick" d="M 1600 710 Q 1620 710, 1660 425" marker-end="url(#arrG3)"/>
+        <path class="flow-line thick" d="M 1600 730 Q 1620 730, 1660 635" marker-end="url(#arrN3)"/>
+
+        <!-- ===== PULSE DOTS ===== -->
+        <!-- Repo → Ingestion (3 parallel streams) -->
+        <circle r="4.5" class="pulse-dot">
+          <animateMotion dur="2.5s" repeatCount="indefinite" path="M 440 230 Q 480 230, 520 185"/>
+        </circle>
+        <circle r="4.5" class="pulse-dot">
+          <animateMotion dur="2.5s" repeatCount="indefinite" begin="0.8s" path="M 440 470 Q 480 470, 520 200"/>
+        </circle>
+        <circle r="4.5" class="pulse-dot">
+          <animateMotion dur="2.5s" repeatCount="indefinite" begin="1.6s" path="M 440 770 Q 480 770, 520 220"/>
+        </circle>
+
+        <!-- Pipeline stages -->
+        <circle r="3.5" class="pulse-dot">
+          <animateMotion dur="1.5s" repeatCount="indefinite" begin="2.5s" path="M 710 250 L 710 270"/>
+        </circle>
+        <circle r="3.5" class="pulse-dot">
+          <animateMotion dur="1.5s" repeatCount="indefinite" begin="3s" path="M 710 400 L 710 420"/>
+        </circle>
+        <circle r="3.5" class="pulse-dot">
+          <animateMotion dur="1.5s" repeatCount="indefinite" begin="4s" path="M 710 610 L 710 630"/>
+        </circle>
+
+        <!-- Worker → ArcadeDB -->
+        <circle r="4.5" class="pulse-dot">
+          <animateMotion dur="2s" repeatCount="indefinite" begin="3.5s" path="M 900 510 Q 935 510, 960 470"/>
+        </circle>
+
+        <!-- Consistency → ArcadeDB warnings -->
+        <circle r="3.5" class="pulse-dot gold">
+          <animateMotion dur="2.5s" repeatCount="indefinite" begin="4.5s" path="M 900 720 Q 935 720, 960 700"/>
+        </circle>
+
+        <!-- MCP → Consumers -->
+        <circle r="4" class="pulse-dot teal">
+          <animateMotion dur="3s" repeatCount="indefinite" begin="0s" path="M 1600 690 Q 1620 690, 1660 215"/>
+        </circle>
+        <circle r="4" class="pulse-dot gold">
+          <animateMotion dur="3s" repeatCount="indefinite" begin="1s" path="M 1600 710 Q 1620 710, 1660 425"/>
+        </circle>
+        <circle r="4" class="pulse-dot navy">
+          <animateMotion dur="3s" repeatCount="indefinite" begin="2s" path="M 1600 730 Q 1620 730, 1660 635"/>
+        </circle>
+      </svg>
+    </div>
+
+    <div class="legend-strip">
+      <div class="legend-item"><div class="legend-line red"></div><span>SCIP index upload</span></div>
+      <div class="legend-item"><div class="legend-line gold"></div><span>Warnings / drift</span></div>
+      <div class="legend-item"><div class="legend-line teal"></div><span>Developer query</span></div>
+      <div class="legend-item"><div class="legend-swatch" style="background: #B31E2A;"></div><span>Authoritative graph</span></div>
+      <div class="legend-item"><div class="legend-swatch" style="background: #F2A900;"></div><span>Processing stage</span></div>
+      <div class="legend-item" style="margin-left: auto;"><span style="font-family: var(--ff-mono); font-size: 0.7rem;">~50–100 indexes/day · ~1–2 min staleness · ACID per repo</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 11 ============ -->
+<section data-background-color="#FAF6F0">
+  <div class="slide-frame has-sidebar"><div class="slide-main">
+    <div class="eyebrow"><span class="mark">PATHFINDER</span><span>11 / 16 · Technology Choices</span></div>
+    <div class="slide-kicker">Open source · No Docker · No Yarn</div>
+    <h2 class="slide-title">Why these tools, and not others.</h2>
+
+    <div class="tech-grid">
+      <div class="tech-card auto-reveal" data-delay="1">
+        <div class="tech-name">ArcadeDB</div>
+        <span class="tech-license">Apache 2.0</span>
+        <p>Multi-model graph + document + vector database. JVM-native, runs as a single <code style="font-family:var(--ff-mono); font-size:0.85em;">java -jar</code>. Handles concurrent writes (unlike KuzuDB, which was archived in 2025). Built-in MCP server.</p>
+      </div>
+      <div class="tech-card teal auto-reveal" data-delay="2">
+        <div class="tech-name">SCIP Indexers</div>
+        <span class="tech-license">Apache 2.0</span>
+        <p>scip-typescript and scip-java provide compiler-grade symbol resolution that Tree-sitter cannot — including TypeScript type inference and Spring DI binding.</p>
+      </div>
+      <div class="tech-card gold auto-reveal" data-delay="3">
+        <div class="tech-name">VSCode Copilot Enterprise</div>
+        <span class="tech-license">Existing License</span>
+        <p>Native support for custom agents, instructions files, and MCP servers. Already paid for. Eliminates the need for a separate AI coding tool.</p>
+      </div>
+      <div class="tech-card auto-reveal" data-delay="4">
+        <div class="tech-name">DeepWiki MCP</div>
+        <span class="tech-license">Devin · Phase 1 Only</span>
+        <p>Useful as a starting context layer for Phase 1 validation. <strong style="color:var(--charcoal);">Replaced in Phase 2</strong> because per-query ACU consumption ($2/ACU) makes ongoing usage at 100+ developer scale cost-unpredictable.</p>
+      </div>
+      <div class="tech-card teal auto-reveal" data-delay="5">
+        <div class="tech-name">GitHub Actions (existing)</div>
+        <span class="tech-license">Existing CI/CD</span>
+        <p>Already in use across all 35 repos. Phase 3's SCIP indexing piggy-backs on the existing merge-trigger workflow — no new CI infrastructure to provision.</p>
+      </div>
+      <div class="tech-card gold auto-reveal" data-delay="6">
+        <div class="tech-name">AGENTS.md Standard</div>
+        <span class="tech-license">Linux Foundation</span>
+        <p>Cross-tool context standard, donated to the Agentic AI Foundation in 2025. Adopted by 60,000+ projects. Future-proofs us against tool changes (Copilot, Claude, Devin all read it).</p>
+      </div>
+    </div>
+
+    <div class="accent-bar full" style="background: linear-gradient(90deg, var(--teal), var(--primary-red), var(--accent-gold));"></div>
+  </div><div class="quick-facts">
+      <div class="qf-label auto-reveal" data-delay="1">Constraints honored</div>
+      <div class="qf-item auto-reveal" data-delay="1">
+        <div class="qf-key">Open source</div>
+        <div class="qf-num gold">100%</div>
+        <div class="qf-detail">OSI-approved licenses only</div>
+      </div><div class="qf-item auto-reveal" data-delay="2">
+        <div class="qf-key">Docker required</div>
+        <div class="qf-num">No</div>
+        <div class="qf-detail">java -jar, pip, npm only</div>
+      </div><div class="qf-item auto-reveal" data-delay="3">
+        <div class="qf-key">Yarn required</div>
+        <div class="qf-num gold">No</div>
+        <div class="qf-detail">npm ci / npx everywhere</div>
+      </div><div class="qf-item auto-reveal" data-delay="4">
+        <div class="qf-key">Existing tooling</div>
+        <div class="qf-num">Reused</div>
+        <div class="qf-detail">Copilot Enterprise, Devin, GHA</div>
+      </div>
+    </div></div></section>
+
+<!-- ============ SLIDE 12 ============ -->
+<section data-background-color="#FAF6F0">
+  <div class="slide-frame has-sidebar"><div class="slide-main">
+    <div class="eyebrow"><span class="mark">PATHFINDER</span><span>12 / 16 · Developer Workflow</span></div>
+    <div class="slide-kicker">One typed input. Guided execution.</div>
+    <h2 class="slide-title">From JIRA ticket to merged PR — in ten steps.</h2>
+
+    <div class="workflow-diagram">
+      <div class="workflow-steps" style="margin-bottom: 16px;">
+        <div class="workflow-step active auto-reveal" data-delay="1">
+          <div class="step-num">01</div>
+          <h5>Open Copilot Chat</h5>
+          <p>Developer selects @story-analyzer agent from the dropdown</p>
+        </div>
+        <div class="workflow-step active auto-reveal" data-delay="2">
+          <div class="step-num">02</div>
+          <h5>Type ticket ID</h5>
+          <p><code style="font-family:var(--ff-mono); font-size:0.85em;">PROJ-1234</code> — the only typed prompt</p>
+        </div>
+        <div class="workflow-step active auto-reveal" data-delay="3">
+          <div class="step-num">03</div>
+          <h5>Agent analyzes</h5>
+          <p>Reads JIRA · queries cross-repo context · reads manifest</p>
+        </div>
+        <div class="workflow-step active auto-reveal" data-delay="4">
+          <div class="step-num">04</div>
+          <h5>Review analysis</h5>
+          <p>Developer confirms affected repos, components, APIs</p>
+        </div>
+        <div class="workflow-step active auto-reveal" data-delay="5">
+          <div class="step-num">05</div>
+          <h5>Hand off to planner</h5>
+          <p>Click "Plan Implementation" button — no retyping</p>
+        </div>
+      </div>
+      <div class="workflow-steps">
+        <div class="workflow-step active auto-reveal" data-delay="6">
+          <div class="step-num">06</div>
+          <h5>Planner produces plan</h5>
+          <p>Ordered, file-by-file changes with pattern citations</p>
+        </div>
+        <div class="workflow-step active auto-reveal" data-delay="7">
+          <div class="step-num">07</div>
+          <h5>Review plan</h5>
+          <p>Adjust scope · flag cross-repo work as separate tickets</p>
+        </div>
+        <div class="workflow-step active auto-reveal" data-delay="8">
+          <div class="step-num">08</div>
+          <h5>Start implementation</h5>
+          <p>Click "Start Implementation" — switches to Agent mode</p>
+        </div>
+        <div class="workflow-step active auto-reveal" data-delay="9">
+          <div class="step-num">09</div>
+          <h5>Review each change</h5>
+          <p>File-by-file keep/undo · Copilot self-corrects on errors</p>
+        </div>
+        <div class="workflow-step active auto-reveal" data-delay="10">
+          <div class="step-num">10</div>
+          <h5>Code review agent</h5>
+          <p>@code-reviewer validates AC coverage · ready for PR</p>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 20px; padding: 18px 26px; background: white; border-left: 3px solid var(--primary-red); font-size: 0.9rem; color: var(--charcoal); display: flex; gap: 24px; align-items: center;" class="auto-reveal" data-delay="10">
+      <strong style="font-family: var(--ff-display); font-size: 1.4rem; font-weight: 600; color: var(--primary-red); flex-shrink: 0;">Honest framing</strong>
+      <span>This is not a one-prompt workflow. It is a <em>guided, standardized</em> workflow with 5 review checkpoints. Developer judgment is preserved at each step — the AI does the routing and the drafting, the human does the deciding.</span>
+    </div>
+
+    <div class="accent-bar full" style="background: var(--primary-red);"></div>
+  </div><div class="quick-facts">
+      <div class="qf-label auto-reveal" data-delay="1">Per story</div>
+      <div class="qf-item auto-reveal" data-delay="1">
+        <div class="qf-key">Typed input</div>
+        <div class="qf-num gold">1</div>
+        <div class="qf-detail">Just the JIRA ticket ID</div>
+      </div><div class="qf-item auto-reveal" data-delay="2">
+        <div class="qf-key">Review checkpoints</div>
+        <div class="qf-num">5</div>
+        <div class="qf-detail">Human-in-the-loop preserved</div>
+      </div><div class="qf-item auto-reveal" data-delay="3">
+        <div class="qf-key">Agent handoffs</div>
+        <div class="qf-num gold">3</div>
+        <div class="qf-detail">Analyzer → Planner → Reviewer</div>
+      </div><div class="qf-item auto-reveal" data-delay="4">
+        <div class="qf-key">Time target</div>
+        <div class="qf-num">< 30 min</div>
+        <div class="qf-detail">From 2–4 hours today</div>
+      </div>
+    </div></div></section>
+
+<!-- ============ SLIDE 13 ============ -->
+<section data-background-color="#FAF6F0">
+  <div class="slide-frame has-sidebar"><div class="slide-main">
+    <div class="eyebrow"><span class="mark">PATHFINDER</span><span>13 / 16 · Honest Tradeoffs</span></div>
+    <div class="slide-kicker">What we gain · What we accept</div>
+    <h2 class="slide-title">No silver bullets. Real tradeoffs, named.</h2>
+
+    <div class="proscons-grid">
+      <div class="proscons-col">
+        <h3>What Pathfinder Gives Us</h3>
+        <div class="pc-row auto-reveal" data-delay="1">
+          <div class="pc-mark">+</div>
+          <div><strong>Standardized workflow</strong> — every developer follows the same pipeline, eliminating per-individual quality variance</div>
+        </div>
+        <div class="pc-row auto-reveal" data-delay="2">
+          <div class="pc-mark">+</div>
+          <div><strong>Faster routing decisions</strong> — affected repos identified by the agent with file-path citations, not guesswork</div>
+        </div>
+        <div class="pc-row auto-reveal" data-delay="3">
+          <div class="pc-mark">+</div>
+          <div><strong>Cross-repo blast radius visible early</strong> — impact discovered before coding, not in QA</div>
+        </div>
+        <div class="pc-row auto-reveal" data-delay="4">
+          <div class="pc-mark">+</div>
+          <div><strong>Pattern compliance built-in</strong> — copilot-instructions.md forces every generation through team standards</div>
+        </div>
+        <div class="pc-row auto-reveal" data-delay="5">
+          <div class="pc-mark">+</div>
+          <div><strong>Reversible at every phase</strong> — Phase 1 has zero infrastructure. We can stop after week 2 and lose nothing material.</div>
+        </div>
+        <div class="pc-row auto-reveal" data-delay="6">
+          <div class="pc-mark">+</div>
+          <div><strong>PO benefits too</strong> — JIRA automation enhances stories with technical context without POs leaving their tool</div>
+        </div>
+      </div>
+
+      <div class="proscons-col cons">
+        <h3>What We Accept In Return</h3>
+        <div class="pc-row auto-reveal" data-delay="7">
+          <div class="pc-mark">−</div>
+          <div><strong>AI hallucination is a real risk</strong> — agents must cite file paths; planner verifies; human reviews at every step. Mitigated, not eliminated.</div>
+        </div>
+        <div class="pc-row auto-reveal" data-delay="8">
+          <div class="pc-mark">−</div>
+          <div><strong>Documentation maintenance burden</strong> — pathfinder-hub needs a named owner, not "the team." Wiki rot kills projects like this.</div>
+        </div>
+        <div class="pc-row auto-reveal" data-delay="9">
+          <div class="pc-mark">−</div>
+          <div><strong>Learning curve for agent authoring</strong> — writing good .agent.md files takes iteration. The first version will produce mediocre output.</div>
+        </div>
+        <div class="pc-row auto-reveal" data-delay="10">
+          <div class="pc-mark">−</div>
+          <div><strong>Phase 3 carries operational weight</strong> — ArcadeDB needs JVM tuning, backups, monitoring. 2–4 hours/week of platform-engineering attention.</div>
+        </div>
+        <div class="pc-row auto-reveal" data-delay="10">
+          <div class="pc-mark">−</div>
+          <div><strong>SCIP adds CI time</strong> — 30–60 seconds per build. Acceptable, but it's a real cost to every PR.</div>
+        </div>
+        <div class="pc-row auto-reveal" data-delay="10">
+          <div class="pc-mark">−</div>
+          <div><strong>Adoption isn't automatic</strong> — developers must actually use the agents. If the workflow feels slower than habit, it dies.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="accent-bar full" style="background: linear-gradient(90deg, var(--teal) 0%, var(--teal) 50%, var(--accent-gold) 50%);"></div>
+  </div><div class="quick-facts">
+      <div class="qf-label auto-reveal" data-delay="1">The honest view</div>
+      <div class="qf-item auto-reveal" data-delay="1">
+        <div class="qf-key">Adoption risk</div>
+        <div class="qf-num gold">Real</div>
+        <div class="qf-detail">Phase 1 MVP validates first</div>
+      </div><div class="qf-item auto-reveal" data-delay="2">
+        <div class="qf-key">Hallucination</div>
+        <div class="qf-num">Mitigated</div>
+        <div class="qf-detail">Cite paths · human review</div>
+      </div><div class="qf-item auto-reveal" data-delay="3">
+        <div class="qf-key">Maintenance</div>
+        <div class="qf-num gold">Named owner</div>
+        <div class="qf-detail">Not "the team"</div>
+      </div><div class="qf-item auto-reveal" data-delay="4">
+        <div class="qf-key">Reversibility</div>
+        <div class="qf-num">Per phase</div>
+        <div class="qf-detail">Stop anytime, lose nothing</div>
+      </div>
+    </div></div></section>
+
+<!-- ============ SLIDE 14 ============ -->
+<section data-background-color="#FAF6F0">
+  <div class="slide-frame has-sidebar"><div class="slide-main">
+    <div class="eyebrow"><span class="mark">PATHFINDER</span><span>14 / 16 · Cost by Phase</span></div>
+    <div class="slide-kicker">Cost by phase · all figures rounded</div>
+    <h2 class="slide-title">Phase 01 costs roughly fifty dollars.</h2>
+    <p class="slide-lede">Every phase has a bounded, defensible cost. Phase 01 is an experiment, not a commitment.</p>
+
+    <div class="cost-table">
+      <div class="cost-cell header">Phase</div>
+      <div class="cost-cell header">Infrastructure</div>
+      <div class="cost-cell header">Tools & Services</div>
+      <div class="cost-cell header">People</div>
+
+      <div class="cost-cell phase-label p1 auto-reveal" data-delay="1" style="border-right-color: var(--teal);">Phase 01<br/><span style="font-family: var(--ff-body); font-size: 0.78rem; color: var(--muted-gray); font-weight: 400; letter-spacing: 0.1em; text-transform: uppercase;">Validate</span></div>
+      <div class="cost-cell auto-reveal" data-delay="2">
+        <span class="cost-num">$0</span>
+        <span class="cost-detail">No servers. No hosting. Runs entirely on existing developer laptops.</span>
+      </div>
+      <div class="cost-cell auto-reveal" data-delay="3">
+        <span class="cost-num">~$50</span>
+        <span class="cost-detail">Bounded Devin ACU cost during MVP. Existing Copilot Enterprise license.</span>
+      </div>
+      <div class="cost-cell auto-reveal" data-delay="4">
+        <span class="cost-num">1 dev × 2 weeks</span>
+        <span class="cost-detail">Includes learning curve for Copilot agent authoring system.</span>
+      </div>
+
+      <div class="cost-cell phase-label p2 auto-reveal" data-delay="5">Phase 02<br/><span style="font-family: var(--ff-body); font-size: 0.78rem; color: var(--muted-gray); font-weight: 400; letter-spacing: 0.1em; text-transform: uppercase;">Scale</span></div>
+      <div class="cost-cell auto-reveal" data-delay="6">
+        <span class="cost-num">~$50/mo</span>
+        <span class="cost-detail">Small VM for MCP server, or free on GitHub-hosted Action runner.</span>
+      </div>
+      <div class="cost-cell auto-reveal" data-delay="7">
+        <span class="cost-num">$100–160</span>
+        <span class="cost-detail">One-time DeepWiki export cost (35 repos × 1–2 ACUs each). All other tools open source.</span>
+      </div>
+      <div class="cost-cell auto-reveal" data-delay="8">
+        <span class="cost-num">1 dev × 4 weeks</span>
+        <span class="cost-detail">2 weeks setup + 2 weeks rollout across 35 repos and PO interface.</span>
+      </div>
+
+      <div class="cost-cell phase-label p3 auto-reveal" data-delay="9">Phase 03<br/><span style="font-family: var(--ff-body); font-size: 0.78rem; color: var(--muted-gray); font-weight: 400; letter-spacing: 0.1em; text-transform: uppercase;">Deepen</span></div>
+      <div class="cost-cell auto-reveal" data-delay="10">
+        <span class="cost-num">$100–200/mo</span>
+        <span class="cost-detail">Single Linux VM (8 CPU, 16 GB) for ArcadeDB + MCP server + ingestion API.</span>
+      </div>
+      <div class="cost-cell auto-reveal" data-delay="10">
+        <span class="cost-num">$0</span>
+        <span class="cost-detail">ArcadeDB (Apache 2.0) + SCIP indexers (Apache 2.0). No license fees.</span>
+      </div>
+      <div class="cost-cell auto-reveal" data-delay="10">
+        <span class="cost-num">1–2 devs × 8 weeks</span>
+        <span class="cost-detail">Build + rollout. Plus ~2–4 hours/week ongoing maintenance thereafter.</span>
+      </div>
+    </div>
+
+    <div class="accent-bar full" style="background: linear-gradient(90deg, var(--teal), var(--primary-red), var(--accent-gold));"></div>
+  </div><div class="quick-facts">
+      <div class="qf-label auto-reveal" data-delay="1">Total cost view</div>
+      <div class="qf-item auto-reveal" data-delay="1">
+        <div class="qf-key">Phase 01</div>
+        <div class="qf-num gold">~$50</div>
+        <div class="qf-detail">Bounded ACU + 1 dev × 2 wks</div>
+      </div><div class="qf-item auto-reveal" data-delay="2">
+        <div class="qf-key">Phase 02</div>
+        <div class="qf-num">~$210</div>
+        <div class="qf-detail">One-time export + small VM</div>
+      </div><div class="qf-item auto-reveal" data-delay="3">
+        <div class="qf-key">Phase 03</div>
+        <div class="qf-num gold">~$200/mo</div>
+        <div class="qf-detail">VM + ongoing maintenance</div>
+      </div><div class="qf-item auto-reveal" data-delay="4">
+        <div class="qf-key">All tools</div>
+        <div class="qf-num">$0</div>
+        <div class="qf-detail">Apache 2.0 / MIT licenses</div>
+      </div>
+    </div></div></section>
+
+<!-- ============ SLIDE 15 ============ -->
+<section data-background-color="#FAF6F0">
+  <div class="slide-frame has-sidebar"><div class="slide-main">
+    <div class="eyebrow"><span class="mark">PATHFINDER</span><span>Risk Assessment</span></div>
+    <div class="slide-kicker">Top six risks · ranked</div>
+    <h2 class="slide-title">What can go wrong. What we do about it.</h2>
+
+    <div class="risk-grid">
+      <div class="risk-card auto-reveal" data-delay="1">
+        <div class="risk-badge high">
+          <span class="level">High</span>
+          <span class="num">1</span>
+        </div>
+        <div class="risk-content">
+          <h4>Developers don't adopt the agent workflow</h4>
+          <p>Entire initiative fails if developers find it slower than habit.</p>
+          <span class="mitigation">→ Phase 01 MVP with 5–8 developers validates before scaling. Stop/iterate if adoption fails.</span>
+        </div>
+      </div>
+
+      <div class="risk-card auto-reveal" data-delay="2">
+        <div class="risk-badge high">
+          <span class="level">High</span>
+          <span class="num">2</span>
+        </div>
+        <div class="risk-content">
+          <h4>AI hallucination in story analysis</h4>
+          <p>Agent claims components or files exist that don't.</p>
+          <span class="mitigation">→ Agents MUST cite file paths from manifest. Planner verifies via @workspace. Human review at every step.</span>
+        </div>
+      </div>
+
+      <div class="risk-card auto-reveal" data-delay="3">
+        <div class="risk-badge high">
+          <span class="level">High</span>
+          <span class="num">3</span>
+        </div>
+        <div class="risk-content">
+          <h4>Wiki documentation goes stale</h4>
+          <p>The #1 killer of internal documentation projects. Wiki rot kills trust.</p>
+          <span class="mitigation">→ Quarterly automated refresh GHA. Manifest sync on every hub update. Named owner accountable for uptime.</span>
+        </div>
+      </div>
+
+      <div class="risk-card auto-reveal" data-delay="4">
+        <div class="risk-badge med">
+          <span class="level">Medium</span>
+          <span class="num">4</span>
+        </div>
+        <div class="risk-content">
+          <h4>JIRA ticket content exposure to AI context</h4>
+          <p>JIRA MCP exposes ticket data (possibly PII, compliance) to Copilot context.</p>
+          <span class="mitigation">→ JIRA MCP scoped read-only. Server in org network. InfoSec review before Phase 02 deployment.</span>
+        </div>
+      </div>
+
+      <div class="risk-card auto-reveal" data-delay="5">
+        <div class="risk-badge med">
+          <span class="level">Medium</span>
+          <span class="num">5</span>
+        </div>
+        <div class="risk-content">
+          <h4>MCP server downtime mid-sprint</h4>
+          <p>Pathfinder-hub MCP becomes a critical-path dependency.</p>
+          <span class="mitigation">→ Agent fallback to per-repo manifest + @workspace. Degraded cross-repo awareness, not full outage.</span>
+        </div>
+      </div>
+
+      <div class="risk-card auto-reveal" data-delay="6">
+        <div class="risk-badge med">
+          <span class="level">Medium</span>
+          <span class="num">6</span>
+        </div>
+        <div class="risk-content">
+          <h4>Phase 03 operational burden grows</h4>
+          <p>ArcadeDB needs DBA-level attention to stay healthy.</p>
+          <span class="mitigation">→ Named platform owner. 2–4 hr/week budgeted. Nightly backups. Skip Phase 03 entirely if Phase 02 is sufficient.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="accent-bar full" style="background: var(--primary-red);"></div>
+  </div><div class="quick-facts">
+      <div class="qf-label auto-reveal" data-delay="1">Risk posture</div>
+      <div class="qf-item auto-reveal" data-delay="1">
+        <div class="qf-key">High risks</div>
+        <div class="qf-num gold">3</div>
+        <div class="qf-detail">Adoption · hallucination · wiki rot</div>
+      </div><div class="qf-item auto-reveal" data-delay="2">
+        <div class="qf-key">Medium risks</div>
+        <div class="qf-num">3</div>
+        <div class="qf-detail">Security · downtime · op burden</div>
+      </div><div class="qf-item auto-reveal" data-delay="3">
+        <div class="qf-key">Mitigations</div>
+        <div class="qf-num gold">All named</div>
+        <div class="qf-detail">Per-row, in plan doc</div>
+      </div><div class="qf-item auto-reveal" data-delay="4">
+        <div class="qf-key">Reversible</div>
+        <div class="qf-num">Yes</div>
+        <div class="qf-detail">Each phase is its own decision</div>
+      </div>
+    </div></div></section>
+
+<!-- ============ SLIDE 16 ============ -->
+<section data-background-color="#0F1B2D">
+  <div class="closing-slide">
+    <div class="closing-eyebrow auto-reveal" data-delay="1">Pathfinder</div>
+    <h1 class="auto-reveal" data-delay="2">From vague stories<br/>to working code.</h1>
+    <p class="closing-sub auto-reveal" data-delay="3">Three phases. Two gates. One direction.</p>
+  </div>
+</section>
+
+
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script>
+  Reveal.initialize({
+    width: 1920,
+    height: 1080,
+    margin: 0,
+    minScale: 0.2,
+    maxScale: 2.0,
+    hash: true,
+    slideNumber: false,
+    controls: true,
+    progress: true,
+    transition: 'slide',
+    transitionSpeed: 'default',
+    backgroundTransition: 'fade',
+    fragmentInURL: false,
+    viewDistance: 3,
+    keyboard: true,
+    overview: true,
+    touch: true
+  });
+</script>
+
+</body>
+</html>
